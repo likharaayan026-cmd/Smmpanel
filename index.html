@@ -698,11 +698,20 @@
                     showToast('error', 'Sync Failure', 'Failed to initialize session database sync.');
                 } finally {
                     splash.classList.add('hidden');
+                    // Login state active hone par loading overlay hatayein
+                    if (typeof window.hideLoading === 'function') {
+                        window.hideLoading();
+                    } else if (document.getElementById('loadingOverlay')) {
+                        document.getElementById('loadingOverlay').classList.remove('active');
+                    }
                 }
             } else {
                 document.getElementById('dashboard').classList.remove('active');
                 document.getElementById('authContainer').style.display = 'flex';
                 splash.classList.add('hidden');
+                if (document.getElementById('loadingOverlay')) {
+                    document.getElementById('loadingOverlay').classList.remove('active');
+                }
             }
         });
     </script>
@@ -1007,6 +1016,7 @@
         window.handleSignup = handleSignup;
         window.handleLogout = handleLogout;
         window.switchTab = switchTab;
+        window.hideLoading = hideLoading; // OnAuthStateChanged global use ke liye scope expose kiya
     </script>
 </body>
 </html>
