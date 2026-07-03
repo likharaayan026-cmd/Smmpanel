@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMM Panel - User Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10005;
+            color: white;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        .splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .splash-logo {
+            font-size: 65px;
+            margin-bottom: 20px;
+            animation: rocketFloat 2s ease-in-out infinite;
+        }
+        .splash-title {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .splash-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        @keyframes rocketFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+        .loading-overlay.active { display: flex; }
+        .loader-container { text-align: center; }
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 6px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #667eea;
+            border-right-color: #764ba2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: white; margin-top: 25px; font-size: 18px; font-weight: 600; }
+        .loading-subtext { color: rgba(255, 255, 255, 0.7); margin-top: 10px; font-size: 14px; }
+
+        /* Toast Notifications */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; max-width: 400px; }
+        .toast {
+            background: white;
+            padding: 18px 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 320px;
+            animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+        .toast::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; }
+        .toast.success::before { background: linear-gradient(180deg, #10b981 0%, #059669 100%); }
+        .toast.error::before { background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); }
+        .toast.warning::before { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
+        .toast.info::before { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); }
+
+        @keyframes slideInRight {
+            from { transform: translateX(450px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 700; color: #1f2937; margin-bottom: 4px; font-size: 15px; }
+        .toast-message { font-size: 13px; color: #6b7280; }
+        .toast-close { cursor: pointer; color: #9ca3af; font-size: 20px; font-weight: bold; }
+
+        /* Auth Screen */
+        .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .auth-box {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 50px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 450px;
+            animation: slideUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .auth-box h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            font-size: 38px;
+            font-weight: 800;
+        }
+        .auth-box .subtitle { text-align: center; color: #6b7280; margin-bottom: 35px; font-size: 15px; }
+        .tab-buttons { display: flex; gap: 12px; margin-bottom: 35px; background: #f3f4f6; padding: 6px; border-radius: 14px; }
+        .tab-btn { flex: 1; padding: 13px; border: none; background: transparent; cursor: pointer; border-radius: 10px; font-size: 16px; font-weight: 700; color: #6b7280; transition: all 0.3s; }
+        .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .form-group { margin-bottom: 22px; }
+        .form-group label { display: block; margin-bottom: 10px; color: #374151; font-weight: 600; font-size: 14px; }
+        .form-group input { width: 100%; padding: 15px 18px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 15px; background: #f9fafb; }
+        .form-group input:focus { outline: none; border-color: #667eea; background: white; }
+        .btn-primary { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5); }
+        .error-msg { color: #ef4444; font-size: 13px; margin-top: 12px; text-align: center; display: none; padding: 12px; background: #fee2e2; border-radius: 10px; }
+        .error-msg.show { display: block; }
+
+        /* Dashboard Framework */
+        .dashboard { display: none; }
+        .dashboard.active { display: block; }
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 18px; }
+        .menu-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; width: 48px; height: 48px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .logo { font-size: 26px; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .balance-display { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 26px; border-radius: 25px; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+
+        /* Drawer Navigation */
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 998; display: none; }
+        .drawer-overlay.active { display: block; }
+        .drawer { position: fixed; top: 0; left: -320px; width: 300px; height: 100%; background: white; z-index: 999; transition: left 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 4px 0 30px rgba(0,0,0,0.3); }
+        .drawer.active { left: 0; }
+        .drawer-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 25px; }
+        .drawer-header h3 { font-size: 23px; font-weight: 800; }
+        .drawer-menu { padding: 22px 0; }
+        .drawer-item { padding: 17px 25px; cursor: pointer; display: flex; align-items: center; gap: 16px; color: #374151; font-weight: 600; margin: 6px 15px; border-radius: 12px; transition: all 0.3s; }
+        .drawer-item:hover { background: #f3f4f6; transform: translateX(5px); }
+        .drawer-item.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .logout-btn { position: absolute; bottom: 25px; left: 25px; right: 25px; padding: 15px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* Layout Main Elements */
+        .main-content { padding: 25px; max-width: 1400px; margin: 0 auto; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeInUp 0.4s ease; }
+        .section-title { font-size: 30px; color: white; margin-bottom: 28px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+
+        .form-card, .orders-container, .support-card, .calculator-section, .deposit-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 22px;
+            padding: 38px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        /* Forms & Inputs */
+        .select-wrapper { margin-bottom: 25px; position: relative; }
+        .select-wrapper label { display: block; margin-bottom: 10px; color: #374151; font-weight: 600; }
+        select { width: 100%; padding: 15px 18px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 15px; background: #f9fafb; appearance: none; }
+        .package-card { background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 18px; padding: 28px; margin: 28px 0; }
+        .package-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .package-name { font-size: 21px; font-weight: 800; color: #667eea; }
+        .package-price { font-size: 26px; font-weight: 800; color: #764ba2; }
+        .package-description { color: #374151; font-size: 14px; white-space: pre-line; line-height: 1.8; }
+        .package-info { background: white; padding: 20px; border-radius: 14px; margin-top: 18px; }
+        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+        .info-row:last-child { border-bottom: none; }
+        .input-group { margin-bottom: 25px; }
+        .input-group label { display: block; margin-bottom: 10px; color: #374151; font-weight: 600; }
+        .input-group input { width: 100%; padding: 15px 18px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 15px; background: #f9fafb; }
+
+        .total-charge, .razorpay-notice-box { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 28px; border-radius: 16px; text-align: center; margin: 28px 0; }
+        .total-charge-amount { font-size: 46px; font-weight: 800; }
+        .btn-submit { width: 100%; padding: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5); }
+
+        /* MOBILE CARDS FOR "MY ORDERS" */
+        .mobile-orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .order-mobile-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+        .order-mobile-card:hover { transform: translateY(-2px); }
+        .card-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #f3f4f6;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .card-order-id { font-weight: 800; color: #4b5563; font-size: 15px; }
+        .card-row-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .card-label { color: #6b7280; font-weight: 500; }
+        .card-value { color: #1f2937; font-weight: 700; text-align: right; }
+        .card-value a { color: #667eea; text-decoration: none; font-weight: 600; }
+
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-processing { background: #dbeafe; color: #1d4ed8; }
+        .status-completed { background: #d1fae5; color: #059669; }
+        .status-canceled { background: #fee2e2; color: #dc2626; }
+
+        /* Razorpay Custom Box */
+        .razorpay-notice-box { background: linear-gradient(135deg, #2b3a80 0%, #172254 100%); text-align: left; padding: 22px; }
+        .razorpay-notice-box h4 { font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .razorpay-notice-box p { font-size: 13px; opacity: 0.85; line-height: 1.6; }
+
+        /* Support Links */
+        .support-links-box { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; text-align: left; }
+        .support-hyperlink {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #4b5563;
+            text-decoration: none;
+            padding: 16px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        .support-hyperlink:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateX(4px);
+        }
+        .support-hyperlink i { font-size: 18px; color: #667eea; }
+
+        /* Calculator Layout */
+        .calculator-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 28px; }
+        .calculator-result { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 35px; border-radius: 18px; text-align: center; }
+        .result-value { font-size: 52px; font-weight: 800; }
+        .result-breakdown { margin-top: 25px; display: flex; justify-content: space-around; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.25); padding-top: 25px; }
+
+        /* Modal Structure */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 38px; border-radius: 22px; max-width: 450px; width: 90%; text-align: center; }
+        .modal-icon { font-size: 70px; margin-bottom: 18px; }
+        .modal-icon.success { color: #10b981; }
+        .modal-icon.error { color: #ef4444; }
+        .modal-btn { padding: 14px 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; margin: 5px; }
+        .btn-add-funds { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+
+        @media (max-width: 768px) {
+            .calculator-inputs { grid-template-columns: 1fr; }
+            .auth-box, .form-card, .support-card { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-logo"><i class="fas fa-rocket"></i></div>
+        <div class="splash-title">SMM Panel</div>
+        <div class="splash-subtitle">Loading secure environment...</div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader-container">
+            <div class="loader"></div>
+            <div class="loading-text">Loading...</div>
+            <div class="loading-subtext">Please wait</div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="auth-container" id="authContainer" style="display: none;">
+        <div class="auth-box">
+            <h1><i class="fas fa-rocket"></i> SMM Panel</h1>
+            <p class="subtitle">Grow Your Social Media Presence</p>
+            
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+            </div>
+
+            <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-primary" id="loginBtn">Login</button>
+                <p class="error-msg" id="loginError"></p>
+            </form>
+
+            <form class="auth-form" id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create password (min 6 chars)" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="btn-primary" id="signupBtn">Create Account</button>
+                <p class="error-msg" id="signupError"></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <div class="header">
+            <div class="header-left">
+                <button class="menu-btn" onclick="toggleDrawer()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo">SMM Panel</div>
+            </div>
+            <div class="balance-display">
+                <i class="fas fa-wallet"></i> Balance: ₹<span id="userBalance">0.00</span>
+            </div>
+        </div>
+
+        <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+
+        <div class="drawer" id="drawer">
+            <div class="drawer-header">
+                <h3 id="drawerUserName">Welcome User</h3>
+                <p id="drawerUserEmail">user@example.com</p>
+            </div>
+            <div class="drawer-menu">
+                <div class="drawer-item active" onclick="switchSection('newOrder')">
+                    <span class="drawer-item-icon"><i class="fas fa-plus-circle"></i></span>
+                    <span>New Order</span>
+                </div>
+                <div class="drawer-item" onclick="switchSection('orders')">
+                    <span class="drawer-item-icon"><i class="fas fa-shopping-cart"></i></span>
+                    <span>My Orders</span>
+                </div>
+                <div class="drawer-item" onclick="switchSection('calculator')">
+                    <span class="drawer-item-icon"><i class="fas fa-calculator"></i></span>
+                    <span>Price Calculator</span>
+                </div>
+                <div class="drawer-item" onclick="switchSection('deposit')">
+                    <span class="drawer-item-icon"><i class="fas fa-money-bill-wave"></i></span>
+                    <span>Deposit (Razorpay)</span>
+                </div>
+                <div class="drawer-item" onclick="switchSection('support')">
+                    <span class="drawer-item-icon"><i class="fas fa-headset"></i></span>
+                    <span>Support</span>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+
+        <div class="main-content">
+            
+            <div class="content-section active" id="newOrderSection">
+                <h2 class="section-title"><i class="fas fa-plus-circle"></i> Create New Order</h2>
+                <div class="form-card">
+                    <form class="order-form" onsubmit="handleOrderSubmit(event)">
+                        <div class="select-wrapper">
+                            <label><i class="fas fa-list"></i> Select Service Category</label>
+                            <select id="serviceCategory" onchange="loadPackages()" required>
+                                <option value="">Choose a service...</option>
+                                <option value="instagram_views">Instagram Views</option>
+                                <option value="instagram_likes">Instagram Likes</option>
+                                <option value="instagram_followers">Instagram Followers</option>
+                                <option value="instagram_comments">Instagram Comments</option>
+                            </select>
+                        </div>
+
+                        <div id="packageDisplay" style="display:none;">
+                            <div class="package-card">
+                                <div class="package-header">
+                                    <div class="package-name" id="packageName">Instagram Views - Premium</div>
+                                    <div class="package-price">₹<span id="packagePrice">1</span>/500</div>
+                                </div>
+                                <div class="package-description" id="packageDescription"></div>
+                                <div class="package-info">
+                                    <div class="info-row"><span class="info-label">Average Time</span><span class="info-value" id="avgTime"></span></div>
+                                    <div class="info-row"><span class="info-label">Min Order</span><span class="info-value" id="minOrder"></span></div>
+                                    <div class="info-row"><span class="info-label">Max Order</span><span class="info-value" id="maxOrder"></span></div>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label><i class="fas fa-link"></i> Instagram Link (Reel/Video)</label>
+                                <input type="url" id="orderLink" placeholder="https://www.instagram.com/reel/..." required>
+                            </div>
+
+                            <div class="input-group">
+                                <label><i class="fas fa-hashtag"></i> Quantity</label>
+                                <input type="number" id="orderQuantity" placeholder="Enter quantity" oninput="calculateTotal()" required>
+                            </div>
+
+                            <div class="total-charge">
+                                <div class="total-charge-label">Total Charge</div>
+                                <div class="total-charge-amount">₹<span id="totalCharge">0.00</span></div>
+                            </div>
+
+                            <button type="submit" class="btn-submit" id="orderSubmitBtn"><i class="fas fa-rocket"></i> Place Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="content-section" id="ordersSection">
+                <h2 class="section-title"><i class="fas fa-shopping-cart"></i> My Orders</h2>
+                <div class="orders-container">
+                    <div id="mobileOrdersContainer" class="mobile-orders-list"></div>
+                </div>
+            </div>
+
+            <div class="content-section" id="calculatorSection">
+                <h2 class="section-title"><i class="fas fa-calculator"></i> Price Calculator</h2>
+                <div class="calculator-section">
+                    <h3 class="calculator-title">Calculate Your Order Cost</h3>
+                    <div class="calculator-inputs">
+                        <div class="select-wrapper">
+                            <label><i class="fas fa-list"></i> Select Service</label>
+                            <select id="calcService" onchange="updateCalculator()">
+                                <option value="">Choose a service...</option>
+                                <option value="instagram_views">Instagram Views</option>
+                                <option value="instagram_likes">Instagram Likes</option>
+                                <option value="instagram_followers">Instagram Followers</option>
+                                <option value="instagram_comments">Instagram Comments</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-hashtag"></i> Quantity</label>
+                            <input type="number" id="calcQuantity" placeholder="Enter quantity" oninput="updateCalculator()">
+                        </div>
+                    </div>
+                    <div class="calculator-result" id="calcResult" style="display:none;">
+                        <div class="result-label">Estimated Cost</div>
+                        <div class="result-value">₹<span id="calcTotal">0.00</span></div>
+                        <div class="result-breakdown">
+                            <div class="breakdown-item"><div class="breakdown-label">Price Per Unit</div><div class="breakdown-value">₹<span id="calcPricePerUnit">0</span></div></div>
+                            <div class="breakdown-item"><div class="breakdown-label">Total Units</div><div class="breakdown-value"><span id="calcUnits">0</span></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section" id="depositSection">
+                <h2 class="section-title"><i class="fas fa-money-bill-wave"></i> Instant Add Funds</h2>
+                <div class="deposit-card">
+                    <form class="deposit-form" onsubmit="initiateRazorpayPayment(event)">
+                        <div class="razorpay-notice-box">
+                            <h4><i class="fab fa-readme"></i> Automated Razorpay Gateway</h4>
+                            <p>Funds will be credited to your dashboard account instantly upon completing the secure gateway checkout process.</p>
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-rupee-sign"></i> Amount to Add (INR)</label>
+                            <input type="number" id="depositAmount" placeholder="Enter amount (e.g. 500)" min="10" required>
+                        </div>
+                        <button type="submit" class="btn-submit" id="depositSubmitBtn"><i class="fas fa-credit-card"></i> Pay Securely via Razorpay</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="content-section" id="supportSection">
+                <h2 class="section-title"><i class="fas fa-headset"></i> Support Center</h2>
+                <div class="support-card">
+                    <h3>Contact Official Support</h3>
+                    <p>Click on any link below to access our official channels or send an inquiry direct to our team.</p>
+                    
+                    <div class="support-links-box">
+                        <a href="https://play.google.com/store/apps/details?id=com.aayanindustries.shop" target="_blank" class="support-hyperlink">
+                            <i class="fab fa-google-play"></i> Download Our Official Android App
+                        </a>
+                        <a href="https://aayanindustries.shop" target="_blank" class="support-hyperlink">
+                            <i class="fas fa-globe"></i> Visit Our Official Website Portal
+                        </a>
+                        <a href="mailto:likharaayan026@gmail.com" class="support-hyperlink">
+                            <i class="fas fa-envelope"></i> Send Email to Helpdesk Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal" id="messageModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon"></div>
+            <h3 class="modal-title" id="modalTitle">Success!</h3>
+            <p class="modal-message" id="modalMessage"></p>
+            <button class="modal-btn" onclick="closeModal()">OK</button>
+            <button class="modal-btn btn-add-funds" id="addFundsBtn" style="display:none;" onclick="goToDeposit()">Add Funds</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, get, query, orderByChild, equalTo, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBt3iYcR4SijEJqtrBlH8mNr292vakgJFQ",
+            authDomain: "figo-movies.firebaseapp.com",
+            databaseURL: "https://figo-movies-default-rtdb.firebaseio.com",
+            projectId: "figo-movies",
+            storageBucket: "figo-movies.firebasestorage.app",
+            messagingSenderId: "425238806262",
+            appId: "1:425238806262:web:7d23814e4b550695bb76d7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        window.firebaseAuth = auth;
+        window.firebaseDatabase = database;
+
+        function formatOrderDate(timestamp) {
+            if(!timestamp) return "N/A";
+            const date = new Date(timestamp);
+            
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            
+            let hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
+            
+            return `${day}-${month}-${year} ${strTime}`;
+        }
+
+        async function loadUserData(user) {
+            const userRef = ref(database, 'users/' + user.uid);
+            const snapshot = await get(userRef);
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                document.getElementById('drawerUserName').textContent = userData.name || 'User';
+                document.getElementById('drawerUserEmail').textContent = user.email;
+                document.getElementById('userBalance').textContent = (userData.balance || 0).toFixed(2);
+                setupRealtimeOrders(user.uid);
+            }
+        }
+
+        // Live syncing with Admin Panel using Firebase onValue event handler
+        function setupRealtimeOrders(userId) {
+            const ordersRef = ref(database, 'orders');
+            const ordersQuery = query(ordersRef, orderByChild('userId'), equalTo(userId));
+            const mobileContainer = document.getElementById('mobileOrdersContainer');
+
+            onValue(ordersQuery, (snapshot) => {
+                if (!snapshot.exists()) {
+                    mobileContainer.innerHTML = `<p style="text-align:center;padding:30px;color:#9ca3af;font-weight:500;">No orders found in your history.</p>`;
+                    return;
+                }
+
+                mobileContainer.innerHTML = '';
+                const ordersArray = [];
+                snapshot.forEach((childSnapshot) => { 
+                    ordersArray.push({ id: childSnapshot.key, ...childSnapshot.val() }); 
+                });
+                
+                ordersArray.sort((a, b) => b.createdAt - a.createdAt);
+
+                ordersArray.forEach((order) => {
+                    const formattedDateTime = formatOrderDate(order.createdAt);
+                    const orderStatus = order.status || 'pending';
+                    mobileContainer.innerHTML += `
+                        <div class="order-mobile-card">
+                            <div class="card-row-header">
+                                <span class="card-order-id">#${order.orderId || order.id.slice(0, 8)}</span>
+                                <span class="status-badge status-${orderStatus}">${orderStatus.toUpperCase()}</span>
+                            </div>
+                            <div class="card-row-item">
+                                <span class="card-label">Service:</span>
+                                <span class="card-value">${order.service}</span>
+                            </div>
+                            <div class="card-row-item">
+                                <span class="card-label">Quantity:</span>
+                                <span class="card-value">${order.quantity ? order.quantity.toLocaleString() : 0}</span>
+                            </div>
+                            <div class="card-row-item">
+                                <span class="card-label">Amount:</span>
+                                <span class="card-value">₹${order.amount ? order.amount.toFixed(2) : '0.00'}</span>
+                            </div>
+                            <div class="card-row-item">
+                                <span class="card-label">Date & Time:</span>
+                                <span class="card-value">${formattedDateTime}</span>
+                            </div>
+                            <div class="card-row-item" style="margin-bottom:0; margin-top:8px;">
+                                <span class="card-label">Action Target:</span>
+                                <span class="card-value"><a href="${order.link}" target="_blank"><i class="fas fa-external-link-alt"></i> View Link</a></span>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        window.loadUserData = loadUserData;
+
+        (async () => {
+            try {
+                await setPersistence(auth, browserLocalPersistence);
+            } catch (error) {
+                console.error("Persistence error:", error);
+            }
+        })();
+
+        onAuthStateChanged(auth, async (user) => {
+            const splash = document.getElementById('splashScreen');
+            if (user) {
+                try {
+                    document.getElementById('authContainer').style.display = 'none';
+                    document.getElementById('dashboard').classList.add('active');
+                    await window.loadUserData(user);
+                } catch (error) {
+                    showToast('error', 'Sync Failure', 'Failed to initialize session database sync.');
+                } finally {
+                    splash.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('dashboard').classList.remove('active');
+                document.getElementById('authContainer').style.display = 'flex';
+                splash.classList.add('hidden');
+            }
+        });
+    </script>
+
+    <script>
+        const servicePackages = {
+            instagram_views: { name: "Instagram Views - Premium", price: 1, per: 500, description: `⚡ Instagram Reel & Video Views\n💥 Drop - Lifetime Non Drop`, avgTime: "10 min", min: 500, max: 10000000 },
+            instagram_likes: { name: "Instagram Likes - High Quality", price: 2, per: 100, description: `❤️ Real & Active Users\n💥 Drop - Non Drop`, avgTime: "5 min", min: 100, max: 100000 },
+            instagram_followers: { name: "Instagram Followers - Real Users", price: 30, per: 100, description: `👥 Real & Active Accounts\n💥 Drop - Low Drop`, avgTime: "1 hour", min: 100, max: 50000 },
+            instagram_comments: { name: "Instagram Comments - Custom", price: 10, per: 10, description: `💬 Real User Custom Comments\n💥 Drop - Non Drop`, avgTime: "2 hours", min: 10, max: 1000 }
+        };
+
+        // Razorpay Gateway Processor
+        async function initiateRazorpayPayment(event) {
+            event.preventDefault();
+            const amountInput = document.getElementById('depositAmount').value;
+            const amount = parseFloat(amountInput);
+            
+            if(isNaN(amount) || amount <= 0) {
+                showToast('error', 'Invalid Amount', 'Please check payment parameters');
+                return;
+            }
+
+            const user = window.firebaseAuth.currentUser;
+            if(!user) return;
+
+            const submitBtn = document.getElementById('depositSubmitBtn');
+            submitBtn.disabled = true;
+            showLoading('Connecting Gateway...', 'Opening Razorpay Secure Checkout');
+
+            const options = {
+                "key": "rzp_live_T5OZeAeTkrB7YG",
+                "amount": (amount * 100).toString(),
+                "currency": "INR",
+                "name": "SMM Panel Service",
+                "description": "Instant Wallet Deposit Add Funds",
+                "image": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg",
+                "handler": async function (response) {
+                    hideLoading();
+                    showLoading('Validating Payment...', 'Updating your wallet balance');
+                    
+                    try {
+                        const { ref, get, update, push } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                        
+                        const userRef = ref(window.firebaseDatabase, 'users/' + user.uid);
+                        const userSnapshot = await get(userRef);
+                        const userData = userSnapshot.val() || { balance: 0 };
+                        
+                        const currentBalance = userData.balance || 0;
+                        const newBalance = currentBalance + amount;
+
+                        await update(userRef, { balance: newBalance });
+
+                        const logsRef = ref(window.firebaseDatabase, 'deposits');
+                        await push(logsRef, {
+                            userId: user.uid,
+                            userEmail: user.email,
+                            amount: amount,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            status: 'completed',
+                            createdAt: Date.now()
+                        });
+
+                        document.getElementById('userBalance').textContent = newBalance.toFixed(2);
+                        document.getElementById('depositAmount').value = '';
+                        
+                        hideLoading();
+                        showModal('success', 'Funds Added Successfully! 🎉', `₹${amount.toFixed(2)} credited automatically via Razorpay.<br>Payment ID: ${response.razorpay_payment_id}`, false);
+                        showToast('success', 'Deposit Confirmed', `Wallet credited with ₹${amount}`);
+                    } catch(err) {
+                        hideLoading();
+                        showToast('error', 'Database Update Error', 'Contact support with your Payment ID');
+                    } finally {
+                        submitBtn.disabled = false;
+                    }
+                },
+                "prefill": {
+                    "name": user.displayName || "SMM Client",
+                    "email": user.email || "client@smm.com"
+                },
+                "theme": { "color": "#764ba2" },
+                "modal": {
+                    "ondismiss": function(){
+                        hideLoading();
+                        submitBtn.disabled = false;
+                        showToast('warning', 'Payment Cancelled', 'Gateway interface closed');
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toastContainer');
+            if(!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div class="toast-content"><div class="toast-title">${title}</div><div class="toast-message">${message}</div></div><div class="toast-close" onclick="this.parentElement.remove()">×</div>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function showLoading(text, sub) {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.querySelector('.loading-text').textContent = text;
+            overlay.querySelector('.loading-subtext').textContent = sub;
+            overlay.classList.add('active');
+        }
+
+        function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if(tab === 'login') { document.getElementById('loginForm').classList.add('active'); event.target.classList.add('active'); }
+            else { document.getElementById('signupForm').classList.add('active'); event.target.classList.add('active'); }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            showLoading('Authenticating...', 'Verifying profile metrics credentials');
+            try {
+                const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+            } catch (err) { 
+                hideLoading();
+                showToast('error', 'Login Failed', 'Check credentials or connections'); 
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            showLoading('Creating Account...', 'Registering new structural client');
+            try {
+                const { createUserWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+                const cred = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+                await set(ref(window.firebaseDatabase, 'users/' + cred.user.uid), { name, email, balance: 0, createdAt: Date.now() });
+            } catch (err) { 
+                hideLoading();
+                showToast('error', 'Signup error', 'Email might be already in use'); 
+            }
+        }
+
+        async function handleLogout() {
+            showLoading('Logging out...', 'Clearing secured memory storage cache');
+            const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+            await signOut(window.firebaseAuth);
+            hideLoading();
+        }
+
+        function toggleDrawer() { document.getElementById('drawer').classList.toggle('active'); document.getElementById('drawerOverlay').classList.toggle('active'); }
+        
+        function switchSection(sec) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.drawer-item').forEach(d => d.classList.remove('active'));
+            document.getElementById(sec + 'Section').classList.add('active');
+            
+            const itemIndex = { 'newOrder': 0, 'orders': 1, 'calculator': 2, 'deposit': 3, 'support': 4 };
+            document.querySelectorAll('.drawer-item')[itemIndex[sec]].classList.add('active');
+            
+            toggleDrawer();
+        }
+
+        function loadPackages() {
+            const cat = document.getElementById('serviceCategory').value;
+            if(!cat) { document.getElementById('packageDisplay').style.display = 'none'; return; }
+            const pkg = servicePackages[cat];
+            document.getElementById('packageName').textContent = pkg.name;
+            document.getElementById('packagePrice').textContent = pkg.price;
+            document.getElementById('packageDescription').textContent = pkg.description;
+            document.getElementById('avgTime').textContent = pkg.avgTime;
+            document.getElementById('minOrder').textContent = pkg.min;
+            document.getElementById('maxOrder').textContent = pkg.max;
+            document.getElementById('orderQuantity').min = pkg.min;
+            document.getElementById('orderQuantity').max = pkg.max;
+            document.getElementById('packageDisplay').style.display = 'block';
+        }
+
+        function calculateTotal() {
+            const cat = document.getElementById('serviceCategory').value;
+            const qty = parseInt(document.getElementById('orderQuantity').value) || 0;
+            if(!cat) return;
+            const pkg = servicePackages[cat];
+            document.getElementById('totalCharge').textContent = ((qty / pkg.per) * pkg.price).toFixed(2);
+        }
+
+        function updateCalculator() {
+            const svc = document.getElementById('calcService').value;
+            const qty = parseInt(document.getElementById('calcQuantity').value) || 0;
+            if(!svc || qty === 0) { document.getElementById('calcResult').style.display='none'; return; }
+            const pkg = servicePackages[svc];
+            document.getElementById('calcTotal').textContent = ((qty / pkg.per) * pkg.price).toFixed(2);
+            document.getElementById('calcPricePerUnit').textContent = (pkg.price / pkg.per).toFixed(4);
+            document.getElementById('calcUnits').textContent = qty.toLocaleString();
+            document.getElementById('calcResult').style.display = 'block';
+        }
+
+        // Fixed Submission Logic: Binds accurate user authentication references to order records
+        async function handleOrderSubmit(e) {
+            e.preventDefault();
+            const cat = document.getElementById('serviceCategory').value;
+            const link = document.getElementById('orderLink').value;
+            const qty = parseInt(document.getElementById('orderQuantity').value);
+            const pkg = servicePackages[cat];
+            const cost = (qty / pkg.per) * pkg.price;
+            const user = window.firebaseAuth.currentUser;
+
+            if(!user) {
+                showToast('error', 'Session Expired', 'Please re-authenticate your dashboard profile.');
+                return;
+            }
+
+            showLoading('Placing Order...', 'Validating assets');
+            const { ref, get, push, update } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+            
+            try {
+                const userRef = ref(window.firebaseDatabase, 'users/' + user.uid);
+                const snap = await get(userRef);
+                const curBal = snap.val().balance || 0;
+
+                if(curBal < cost) {
+                    hideLoading();
+                    showModal('error', 'Insufficient Balance', `You need ₹${cost.toFixed(2)} to complete this action.`, true);
+                    return;
+                }
+
+                const ordersRef = ref(window.firebaseDatabase, 'orders');
+                const newOrderRef = push(ordersRef);
+                const generatedPushKey = newOrderRef.key;
+                const explicitOrderId = generatedPushKey.slice(-8).toUpperCase();
+
+                // Order document mapping includes unique identifiers for querying
+                await set(newOrderRef, {
+                    userId: user.uid,
+                    userEmail: user.email,
+                    service: pkg.name,
+                    category: cat,
+                    link: link,
+                    quantity: qty,
+                    amount: cost,
+                    status: 'pending', // Defaults to pending, waiting for your admin adjustments
+                    orderId: explicitOrderId,
+                    createdAt: Date.now()
+                });
+
+                await update(userRef, { balance: curBal - cost });
+                
+                document.getElementById('userBalance').textContent = (curBal - cost).toFixed(2);
+                hideLoading();
+                showModal('success', 'Order Placed!', `Your metrics deployment order #${explicitOrderId} was processed successfully.`, false);
+                
+                // Clear input elements
+                document.getElementById('serviceCategory').value = '';
+                document.getElementById('orderLink').value = '';
+                document.getElementById('orderQuantity').value = '';
+                document.getElementById('packageDisplay').style.display = 'none';
+
+            } catch(error) {
+                console.error("Order processing error:", error);
+                hideLoading();
+                showToast('error', 'Order Failed', 'Could not record transaction entry.');
+            }
+        }
+
+        function showModal(type, title, msg, btn) {
+            const m = document.getElementById('messageModal');
+            document.getElementById('modalIcon').className = `modal-icon ${type}`;
+            document.getElementById('modalIcon').innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').innerHTML = msg;
+            document.getElementById('addFundsBtn').style.display = btn ? 'inline-block' : 'none';
+            m.classList.add('active');
+        }
+
+        // Custom Helper helper method to expose set keyword mapping functionality 
+        async function set(dbRef, value) {
+            const { set: firebaseSet } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+            return firebaseSet(dbRef, value);
+        }
+
+        function closeModal() { document.getElementById('messageModal').classList.remove('active'); }
+        function goToDeposit() { closeModal(); switchSection('deposit'); }
+
+        window.toggleDrawer = toggleDrawer;
+        window.switchSection = switchSection;
+        window.loadPackages = loadPackages;
+        window.calculateTotal = calculateTotal;
+        window.updateCalculator = updateCalculator;
+        window.handleOrderSubmit = handleOrderSubmit;
+        window.initiateRazorpayPayment = initiateRazorpayPayment;
+        window.closeModal = closeModal;
+        window.goToDeposit = goToDeposit;
+        window.handleLogin = handleLogin;
+        window.handleSignup = handleSignup;
+        window.handleLogout = handleLogout;
+        window.switchTab = switchTab;
+    </script>
+</body>
+</html>
