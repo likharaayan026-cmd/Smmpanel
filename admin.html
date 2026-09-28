@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aayan SMM · Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        :root {
+            --primary: #4caf50; --primary-dark: #2e7d32; --primary-light: #e8f5e9;
+            --danger: #ef4444; --danger-dark: #dc2626; --warning: #f59e0b; --info: #3b82f6;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.06); --radius-lg: 20px; --radius-md: 14px; --radius-sm: 10px;
+            --text-main: #1e1b2e; --text-muted: #6b7280; --border-color: #e5e7eb; --bg: #f0f7f0;
+        }
+        body { background: var(--bg); min-height: 100vh; color: var(--text-main); }
+        .header { background: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 10px; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .logo { font-size: 22px; font-weight: 800; color: #e65100; }
+        .admin-badge { background: var(--primary); color: white; padding: 5px 14px; border-radius: 20px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+        .live-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 1.5s infinite; display: inline-block; margin-right: 4px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .refresh-btn { background: var(--primary-light); color: var(--primary-dark); border: none; padding: 9px 16px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .refresh-btn:hover { background: var(--primary); color: white; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .stat-card { background: white; border-radius: var(--radius-md); padding: 20px; box-shadow: var(--card-shadow); border-left: 4px solid var(--primary); }
+        .stat-card .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+        .stat-card .stat-value { font-size: 26px; font-weight: 800; }
+        .stat-card.blue { border-left-color: var(--info); }
+        .stat-card.orange { border-left-color: var(--warning); }
+        .stat-card.red { border-left-color: var(--danger); }
+        .main-content { padding: 0 20px 30px; max-width: 1400px; margin: 0 auto; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 6px; border-radius: var(--radius-md); box-shadow: var(--card-shadow); overflow-x: auto; }
+        .tab-btn { padding: 12px 20px; border: none; background: transparent; cursor: pointer; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; color: var(--text-muted); transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .tab-btn:hover:not(.active) { background: #f3f4f6; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .panel { background: white; border-radius: var(--radius-md); padding: 20px; box-shadow: var(--card-shadow); margin-bottom: 20px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .panel-title { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .search-box { display: flex; align-items: center; gap: 8px; background: #f9fafb; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 14px; width: 100%; max-width: 320px; }
+        .search-box input { border: none; background: transparent; outline: none; font-size: 14px; width: 100%; }
+        .search-box i { color: var(--text-muted); }
+        .table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        thead { background: #f9fafb; }
+        th { padding: 14px 16px; text-align: left; font-size: 12.5px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
+        td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+        tbody tr:hover { background: #fafbfc; }
+        tbody tr.new-row { animation: newRow 2s ease; }
+        @keyframes newRow { 0% { background: #d1fae5; } 100% { background: transparent; } }
+        .user-cell { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #4caf50, #8bc34a); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+        .user-name { font-weight: 700; font-size: 13.5px; }
+        .user-email { font-size: 11.5px; color: var(--text-muted); }
+        .balance-pill { background: var(--primary-light); color: var(--primary-dark); padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 13px; display: inline-block; }
+        .status-badge { padding: 4px 11px; border-radius: 20px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px; display: inline-block; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-processing { background: #dbeafe; color: #1d4ed8; }
+        .status-completed { background: #d1fae5; color: #059669; }
+        .status-canceled { background: #fee2e2; color: #dc2626; }
+        .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-sm { padding: 7px 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s; }
+        .btn-add { background: var(--primary); color: white; }
+        .btn-add:hover { background: var(--primary-dark); }
+        .btn-remove { background: var(--danger); color: white; }
+        .btn-remove:hover { background: var(--danger-dark); }
+        .btn-edit { background: var(--info); color: white; }
+        .btn-edit:hover { background: #2563eb; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 28px; border-radius: var(--radius-lg); max-width: 420px; width: 100%; animation: popIn 0.3s ease; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+        .modal-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+        .modal-input { width: 100%; padding: 13px 15px; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); font-size: 15px; background: #f9fafb; margin-bottom: 16px; font-weight: 600; }
+        .modal-input:focus { outline: none; border-color: var(--primary); background: white; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: 14px; }
+        .btn-cancel { background: #f3f4f6; color: var(--text-main); }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-confirm.danger { background: var(--danger); }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(10,8,30,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(12px); }
+        .loading-overlay.active { display: flex; }
+        .loader { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #4caf50; border-right-color: #8bc34a; border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: white; margin-top: 20px; font-size: 16px; font-weight: 700; text-align: center; }
+        .toast-container { position: fixed; top: 18px; right: 18px; z-index: 10000; max-width: 360px; }
+        .toast { background: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); margin-bottom: 12px; display: flex; align-items: center; gap: 14px; min-width: 280px; animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); position: relative; overflow: hidden; }
+        .toast::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; }
+        .toast.success::before { background: var(--primary); }
+        .toast.error::before { background: var(--danger); }
+        .toast.warning::before { background: var(--warning); }
+        .toast.info::before { background: var(--info); }
+        @keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+        .toast-message { font-size: 12.5px; color: var(--text-muted); }
+        .toast-close { cursor: pointer; color: #9ca3af; font-size: 20px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+        .connection-status { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; }
+        .connection-status.connected { background: #d1fae5; color: #059669; }
+        .connection-status.disconnected { background: #fee2e2; color: #dc2626; }
+        .info-banner { background: #fef3c7; color: #92400e; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12.5px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        @media (max-width: 768px) {
+            .header { padding: 12px 14px; }
+            .logo { font-size: 18px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); padding: 14px; gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-card .stat-value { font-size: 20px; }
+            .main-content { padding: 0 14px 20px; }
+            .panel { padding: 14px; }
+            th, td { padding: 10px 12px; font-size: 12.5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="logo"><i class="fas fa-crown"></i> Aayan SMM</div>
+            <span class="admin-badge"><span class="live-dot"></span> ADMIN · LIVE</span>
+        </div>
+        <div class="header-right">
+            <span class="connection-status connected" id="connStatus"><i class="fas fa-circle"></i> Connected</span>
+            <button class="refresh-btn" onclick="loadAllData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="statUsers">0</div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-label">Active Orders</div>
+            <div class="stat-value" id="statOrders">0</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-label">Total Spent (₹)</div>
+            <div class="stat-value" id="statSpent">0</div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-label">Total Deposits (₹)</div>
+            <div class="stat-value" id="statDeposits">0</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('users', this)"><i class="fas fa-users"></i> Users</button>
+            <button class="tab-btn" onclick="switchTab('orders', this)"><i class="fas fa-shopping-cart"></i> Active Orders <span id="orderCountBadge" style="background:#ef4444;color:white;padding:1px 7px;border-radius:10px;font-size:10px;margin-left:4px;display:none;">0</span></button>
+            <button class="tab-btn" onclick="switchTab('history', this)"><i class="fas fa-check-circle"></i> Completed / Canceled</button>
+            <button class="tab-btn" onclick="switchTab('deposits', this)"><i class="fas fa-money-bill-wave"></i> Deposits</button>
+            <button class="tab-btn" onclick="switchTab('logs', this)"><i class="fas fa-history"></i> Admin Logs</button>
+        </div>
+
+        <!-- Users -->
+        <div class="content-section active" id="usersSection">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-users"></i> All Users</div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="userSearch" placeholder="Search by name or email..." oninput="filterUsers()">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Balance</th>
+                                <th>Orders</th>
+                                <th>Spent</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="5" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading users...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Orders -->
+        <div class="content-section" id="ordersSection">
+            <div class="panel">
+                <div class="info-banner">
+                    <i class="fas fa-info-circle"></i>
+                    Marking an order as <strong>Completed</strong> or <strong>Canceled</strong> will remove it from the user's order history. Canceled orders are auto-refunded.
+                </div>
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-shopping-cart"></i> Active Orders (Pending / Processing)</div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="orderSearch" placeholder="Search by order ID or service..." oninput="filterOrders()">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>User</th>
+                                <th>Service</th>
+                                <th>Qty</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading orders...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- History (Completed/Canceled) -->
+        <div class="content-section" id="historySection">
+            <div class="panel">
+                <div class="info-banner">
+                    <i class="fas fa-archive"></i>
+                    These orders are archived. They are hidden from user's panel but stored here for reference.
+                </div>
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-check-circle"></i> Completed / Canceled Orders</div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>User</th>
+                                <th>Service</th>
+                                <th>Qty</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Completed On</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading history...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deposits -->
+        <div class="content-section" id="depositsSection">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-money-bill-wave"></i> All Deposits</div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User Email</th>
+                                <th>Amount</th>
+                                <th>Payment ID</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="depositsTableBody">
+                            <tr><td colspan="5" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading deposits...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="content-section" id="logsSection">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-history"></i> Admin Action Logs</div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>User Email</th>
+                                <th>Amount</th>
+                                <th>Old Balance</th>
+                                <th>New Balance</th>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr><td colspan="7" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading logs...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance Modal -->
+    <div class="modal" id="balanceModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Edit Balance</div>
+            <div class="modal-subtitle" id="modalSubtitle">User</div>
+            <input type="number" class="modal-input" id="balanceInput" placeholder="Enter amount" min="0" step="1">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeBalanceModal()">Cancel</button>
+                <button class="btn-confirm" id="modalConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div class="modal" id="statusModal">
+        <div class="modal-content">
+            <div class="modal-title">Update Order Status</div>
+            <div class="modal-subtitle" id="statusOrderId">Order #</div>
+            <select class="modal-input" id="statusSelect">
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed (Move to archive)</option>
+                <option value="canceled">Canceled (Refund + Move to archive)</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeStatusModal()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmStatusUpdate()">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div>
+            <div class="loader"></div>
+            <div class="loading-text">Loading...</div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, get, set, update, onValue, push, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBt3iYcR4SijEJqtrBlH8mNr292vakgJFQ",
+            authDomain: "figo-movies.firebaseapp.com",
+            databaseURL: "https://figo-movies-default-rtdb.firebaseio.com",
+            projectId: "figo-movies",
+            storageBucket: "figo-movies.firebasestorage.app",
+            messagingSenderId: "425238806262",
+            appId: "1:425238806262:web:7d23814e4b550695bb76d7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        let allUsers = [];
+        let allOrders = [];         // Active orders only (pending/processing)
+        let allHistory = [];        // Archived orders (completed/canceled)
+        let allDeposits = [];
+        let allLogs = [];
+        let currentEditUserId = null;
+        let currentEditAction = 'add';
+        let currentStatusOrderKey = null;
+        let previousActiveKeys = new Set();
+        let isFirstLoad = true;
+
+        // ============================================
+        // HELPERS
+        // ============================================
+        function showToast(type, title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div class="toast-content"><div class="toast-title">${title}</div><div class="toast-message">${message}</div></div><div class="toast-close" onclick="this.parentElement.remove()">×</div>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4500);
+        }
+        window.showToast = showToast;
+
+        function showLoading() { document.getElementById('loadingOverlay').classList.add('active'); }
+        function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+
+        function formatDate(ts) {
+            if(!ts) return 'N/A';
+            const d = new Date(ts);
+            const day = String(d.getDate()).padStart(2, '0');
+            const mon = String(d.getMonth() + 1).padStart(2, '0');
+            const yr = d.getFullYear();
+            let hr = d.getHours();
+            const min = String(d.getMinutes()).padStart(2, '0');
+            const ampm = hr >= 12 ? 'PM' : 'AM';
+            hr = hr % 12 || 12;
+            return `${day}-${mon}-${yr} ${String(hr).padStart(2, '0')}:${min} ${ampm}`;
+        }
+
+        function getInitials(name, email) {
+            if (name && name.trim()) {
+                const parts = name.trim().split(' ');
+                if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+                return name.substring(0, 2).toUpperCase();
+            }
+            return (email || 'U').substring(0, 2).toUpperCase();
+        }
+
+        function updateConnectionStatus(connected) {
+            const el = document.getElementById('connStatus');
+            if (connected) {
+                el.className = 'connection-status connected';
+                el.innerHTML = '<i class="fas fa-circle"></i> Connected';
+            } else {
+                el.className = 'connection-status disconnected';
+                el.innerHTML = '<i class="fas fa-circle"></i> Disconnected';
+            }
+        }
+
+        async function loadAllData() {
+            showLoading();
+            try {
+                await Promise.all([loadUsers(), loadOrders(), loadHistory(), loadDeposits(), loadLogs()]);
+                hideLoading();
+                showToast('success', 'Data Refreshed', 'All data reloaded from Firebase.');
+            } catch (err) {
+                hideLoading();
+                showToast('error', 'Load Failed', err.message);
+            }
+        }
+        window.loadAllData = loadAllData;
+
+        async function loadUsers() {
+            const snap = await get(ref(database, 'users'));
+            allUsers = [];
+            if (snap.exists()) snap.forEach(c => allUsers.push({ uid: c.key, ...c.val() }));
+            renderUsers();
+        }
+
+        async function loadOrders() {
+            const snap = await get(ref(database, 'orders'));
+            allOrders = [];
+            if (snap.exists()) snap.forEach(c => allOrders.push({ key: c.key, ...c.val() }));
+            allOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            previousActiveKeys = new Set(allOrders.map(o => o.key));
+            isFirstLoad = false;
+            renderOrders();
+        }
+
+        async function loadHistory() {
+            const snap = await get(ref(database, 'order_history'));
+            allHistory = [];
+            if (snap.exists()) snap.forEach(c => allHistory.push({ key: c.key, ...c.val() }));
+            allHistory.sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+            renderHistory();
+        }
+
+        async function loadDeposits() {
+            const snap = await get(ref(database, 'deposits'));
+            allDeposits = [];
+            if (snap.exists()) snap.forEach(c => allDeposits.push({ key: c.key, ...c.val() }));
+            allDeposits.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            renderDeposits();
+        }
+
+        async function loadLogs() {
+            const snap = await get(ref(database, 'admin_logs'));
+            allLogs = [];
+            if (snap.exists()) snap.forEach(c => allLogs.push({ key: c.key, ...c.val() }));
+            allLogs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            renderLogs();
+        }
+
+        function updateStats() {
+            document.getElementById('statUsers').textContent = allUsers.length;
+            document.getElementById('statOrders').textContent = allOrders.length;
+            let totalSpent = 0;
+            allOrders.forEach(o => { totalSpent += parseFloat(o.amount) || 0; });
+            allHistory.forEach(o => { totalSpent += parseFloat(o.amount) || 0; });
+            document.getElementById('statSpent').textContent = totalSpent.toFixed(0);
+            let totalDeposits = 0;
+            allDeposits.forEach(d => { if (d.status === 'completed') totalDeposits += parseFloat(d.amount) || 0; });
+            document.getElementById('statDeposits').textContent = totalDeposits.toFixed(0);
+        }
+
+        // ============================================
+        // RENDER USERS
+        // ============================================
+        function renderUsers(filter = '') {
+            const tbody = document.getElementById('usersTableBody');
+            const search = (filter || '').toLowerCase().trim();
+            let filtered = allUsers;
+            if (search) {
+                filtered = allUsers.filter(u =>
+                    (u.name || '').toLowerCase().includes(search) ||
+                    (u.email || '').toLowerCase().includes(search)
+                );
+            }
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><i class="fas fa-user-slash"></i><p>No users found</p></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            filtered.forEach(user => {
+                // Count ALL orders (active + history)
+                const userActive = allOrders.filter(o => o.userId === user.uid);
+                const userHistory = allHistory.filter(o => o.userId === user.uid);
+                const totalOrders = userActive.length + userHistory.length;
+                const userSpent = [...userActive, ...userHistory].reduce((sum, o) => sum + (parseFloat(o.amount) || 0), 0);
+                const initials = getInitials(user.name, user.email);
+                const balance = parseFloat(user.balance || 0).toFixed(2);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">${initials}</div>
+                            <div>
+                                <div class="user-name">${user.name || 'Unknown'}</div>
+                                <div class="user-email">${user.email || 'No email'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="balance-pill">₹${balance}</span></td>
+                    <td>${totalOrders}</td>
+                    <td>₹${userSpent.toFixed(2)}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-sm btn-add" onclick="openBalanceModal('${user.uid}', 'add')"><i class="fas fa-plus"></i> Add</button>
+                            <button class="btn-sm btn-remove" onclick="openBalanceModal('${user.uid}', 'remove')"><i class="fas fa-minus"></i> Remove</button>
+                            <button class="btn-sm btn-edit" onclick="openBalanceModal('${user.uid}', 'set')"><i class="fas fa-pen"></i> Set</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        window.filterUsers = () => renderUsers(document.getElementById('userSearch').value);
+
+        // ============================================
+        // RENDER ACTIVE ORDERS
+        // ============================================
+        function renderOrders(filter = '') {
+            const tbody = document.getElementById('ordersTableBody');
+            const search = (filter || '').toLowerCase().trim();
+            let filtered = allOrders;
+            if (search) {
+                filtered = allOrders.filter(o =>
+                    String(o.orderId || '').toLowerCase().includes(search) ||
+                    (o.service || '').toLowerCase().includes(search) ||
+                    (o.userEmail || '').toLowerCase().includes(search)
+                );
+            }
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>No active orders</p></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            filtered.forEach(order => {
+                const status = order.status || 'pending';
+                const tr = document.createElement('tr');
+                if (!isFirstLoad && !previousActiveKeys.has(order.key)) {
+                    tr.classList.add('new-row');
+                }
+                tr.innerHTML = `
+                    <td><strong>#${order.orderId || order.key.slice(0, 8)}</strong></td>
+                    <td>${order.userEmail || 'N/A'}</td>
+                    <td>${order.service || 'N/A'}</td>
+                    <td>${(order.quantity || 0).toLocaleString()}</td>
+                    <td>₹${(order.amount || 0).toFixed(2)}</td>
+                    <td><span class="status-badge status-${status}">${status.toUpperCase()}</span></td>
+                    <td>${formatDate(order.createdAt)}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-sm btn-edit" onclick="openStatusModal('${order.key}', '${status}', '${order.orderId || order.key.slice(0,8)}')"><i class="fas fa-edit"></i> Status</button>
+                            <button class="btn-sm btn-remove" onclick="deleteOrder('${order.key}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        window.filterOrders = () => renderOrders(document.getElementById('orderSearch').value);
+
+        // ============================================
+        // RENDER HISTORY
+        // ============================================
+        function renderHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            if (allHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fas fa-archive"></i><p>No archived orders yet</p></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            allHistory.forEach(order => {
+                const status = order.status || 'completed';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>#${order.orderId || order.key.slice(0, 8)}</strong></td>
+                    <td>${order.userEmail || 'N/A'}</td>
+                    <td>${order.service || 'N/A'}</td>
+                    <td>${(order.quantity || 0).toLocaleString()}</td>
+                    <td>₹${(order.amount || 0).toFixed(2)}</td>
+                    <td><span class="status-badge status-${status}">${status.toUpperCase()}</span></td>
+                    <td>${formatDate(order.completedAt || order.createdAt)}</td>
+                    <td>
+                        <button class="btn-sm btn-remove" onclick="deleteHistory('${order.key}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.deleteHistory = async function(key) {
+            if (!confirm('Permanently delete this archived record? This cannot be undone.')) return;
+            try {
+                await remove(ref(database, 'order_history/' + key));
+                allHistory = allHistory.filter(h => h.key !== key);
+                renderHistory();
+                showToast('success', 'Record Deleted', 'Archived order removed.');
+            } catch (err) {
+                showToast('error', 'Delete Failed', err.message);
+            }
+        };
+
+        // ============================================
+        // RENDER DEPOSITS
+        // ============================================
+        function renderDeposits() {
+            const tbody = document.getElementById('depositsTableBody');
+            if (allDeposits.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><i class="fas fa-receipt"></i><p>No deposits yet</p></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            allDeposits.forEach(dep => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${dep.userEmail || 'N/A'}</td>
+                    <td><strong>₹${(dep.amount || 0).toFixed(2)}</strong></td>
+                    <td style="font-size:11.5px;color:#6b7280;">${dep.razorpay_payment_id || 'N/A'}</td>
+                    <td><span class="status-badge status-${dep.status === 'completed' ? 'completed' : 'pending'}">${(dep.status || 'pending').toUpperCase()}</span></td>
+                    <td>${formatDate(dep.createdAt)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ============================================
+        // RENDER LOGS
+        // ============================================
+        function renderLogs() {
+            const tbody = document.getElementById('logsTableBody');
+            if (allLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-history"></i><p>No admin logs yet</p></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            allLogs.forEach(log => {
+                const actionColor = log.action === 'add' ? 'completed' : log.action === 'remove' ? 'canceled' : log.action === 'refund' ? 'processing' : 'pending';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="status-badge status-${actionColor}">${(log.action || '').toUpperCase()}</span></td>
+                    <td>${log.userEmail || 'N/A'}</td>
+                    <td><strong>₹${(log.amount || 0).toFixed(2)}</strong></td>
+                    <td>₹${(log.oldBalance || 0).toFixed(2)}</td>
+                    <td>₹${(log.newBalance || 0).toFixed(2)}</td>
+                    <td style="font-size:11.5px;color:#6b7280;">${log.orderId ? '#' + log.orderId : '—'}</td>
+                    <td>${formatDate(log.createdAt)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ============================================
+        // BALANCE MODAL
+        // ============================================
+        window.openBalanceModal = function(uid, action) {
+            const user = allUsers.find(u => u.uid === uid);
+            if (!user) return;
+            currentEditUserId = uid;
+            currentEditAction = action;
+            const modal = document.getElementById('balanceModal');
+            const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+            const input = document.getElementById('balanceInput');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+
+            const actionText = action === 'add' ? 'Add Balance' : action === 'remove' ? 'Remove Balance' : 'Set Balance';
+            title.textContent = actionText;
+            subtitle.textContent = `${user.name || 'User'} · Current: ₹${parseFloat(user.balance || 0).toFixed(2)}`;
+            input.value = action === 'set' ? parseFloat(user.balance || 0).toFixed(2) : '';
+            input.placeholder = action === 'add' ? 'Amount to add' : action === 'remove' ? 'Amount to remove' : 'New balance';
+            confirmBtn.className = 'btn-confirm' + (action === 'remove' ? ' danger' : '');
+            modal.classList.add('active');
+            setTimeout(() => input.focus(), 100);
+        };
+
+        window.closeBalanceModal = function() {
+            document.getElementById('balanceModal').classList.remove('active');
+            currentEditUserId = null;
+        };
+
+        async function confirmBalanceUpdate() {
+            const input = document.getElementById('balanceInput');
+            const amount = parseFloat(input.value);
+
+            if (isNaN(amount) || amount < 0) {
+                showToast('error', 'Invalid Amount', 'Please enter a valid number.');
+                return;
+            }
+
+            const user = allUsers.find(u => u.uid === currentEditUserId);
+            if (!user) return;
+
+            const currentBal = parseFloat(user.balance || 0);
+            let newBal;
+
+            if (currentEditAction === 'add') {
+                newBal = currentBal + amount;
+            } else if (currentEditAction === 'remove') {
+                if (amount > currentBal) {
+                    showToast('error', 'Insufficient Balance', `User only has ₹${currentBal.toFixed(2)}.`);
+                    return;
+                }
+                newBal = currentBal - amount;
+            } else {
+                newBal = amount;
+            }
+
+            const actionLabel = currentEditAction;
+            const editUid = currentEditUserId;
+            const userEmail = user.email;
+            const userName = user.name;
+            closeBalanceModal();
+
+            try {
+                await update(ref(database, 'users/' + editUid), { balance: newBal });
+
+                await push(ref(database, 'admin_logs'), {
+                    action: actionLabel,
+                    userId: editUid,
+                    userEmail: userEmail,
+                    amount: amount,
+                    oldBalance: currentBal,
+                    newBalance: newBal,
+                    createdAt: Date.now()
+                });
+
+                await push(ref(database, 'notifications/' + editUid), {
+                    title: actionLabel === 'add' ? 'Balance Added' : actionLabel === 'remove' ? 'Balance Removed' : 'Balance Updated',
+                    message: `Your wallet ${actionLabel === 'add' ? 'was credited with' : actionLabel === 'remove' ? 'was debited by' : 'was set to'} ₹${amount.toFixed(2)}`,
+                    createdAt: Date.now()
+                });
+
+                showToast('success', 'Balance Updated', `${userName || userEmail}: ₹${currentBal.toFixed(2)} → ₹${newBal.toFixed(2)}`);
+            } catch (err) {
+                showToast('error', 'Update Failed', err.message);
+            }
+        }
+        window.confirmBalanceUpdate = confirmBalanceUpdate;
+
+        // ============================================
+        // STATUS MODAL
+        // ============================================
+        window.openStatusModal = function(orderKey, currentStatus, orderId) {
+            currentStatusOrderKey = orderKey;
+            document.getElementById('statusOrderId').textContent = `Order #${orderId}`;
+            document.getElementById('statusSelect').value = currentStatus;
+            document.getElementById('statusModal').classList.add('active');
+        };
+
+        window.closeStatusModal = function() {
+            document.getElementById('statusModal').classList.remove('active');
+            currentStatusOrderKey = null;
+        };
+
+        // ============================================
+        // CONFIRM STATUS UPDATE
+        // ============================================
+        async function confirmStatusUpdate() {
+            const newStatus = document.getElementById('statusSelect').value;
+            if (!currentStatusOrderKey) return;
+
+            const order = allOrders.find(o => o.key === currentStatusOrderKey);
+            if (!order) { closeStatusModal(); return; }
+
+            const oldStatus = order.status || 'pending';
+            const orderAmount = parseFloat(order.amount || 0);
+            const orderUserId = order.userId;
+            const orderKey = currentStatusOrderKey;
+            const orderId = order.orderId || orderKey.slice(0, 8);
+            const userEmail = order.userEmail;
+
+            closeStatusModal();
+
+            // If new status is pending or processing → just update in place
+            if (newStatus === 'pending' || newStatus === 'processing') {
+                showLoading();
+                try {
+                    await update(ref(database, 'orders/' + orderKey), {
+                        status: newStatus,
+                        updatedAt: Date.now()
+                    });
+                    hideLoading();
+                    showToast('success', 'Status Updated', `Order #${orderId} → ${newStatus.toUpperCase()}`);
+                } catch (err) {
+                    hideLoading();
+                    showToast('error', 'Update Failed', err.message);
+                }
+                return;
+            }
+
+            // New status is completed OR canceled → move to archive (remove from active orders)
+            showLoading();
+            try {
+                // If canceling (and not already canceled) → refund user
+                if (newStatus === 'canceled' && oldStatus !== 'canceled') {
+                    const userRef = ref(database, 'users/' + orderUserId);
+                    const userSnap = await get(userRef);
+                    const currentBal = parseFloat(userSnap.val()?.balance || 0);
+                    const newBal = currentBal + orderAmount;
+
+                    await update(userRef, { balance: newBal });
+
+                    await push(ref(database, 'admin_logs'), {
+                        action: 'refund',
+                        userId: orderUserId,
+                        userEmail: userEmail,
+                        amount: orderAmount,
+                        oldBalance: currentBal,
+                        newBalance: newBal,
+                        orderId: orderId,
+                        createdAt: Date.now()
+                    });
+
+                    await push(ref(database, 'notifications/' + orderUserId), {
+                        title: 'Order Canceled & Refunded',
+                        message: `Order #${orderId} canceled. ₹${orderAmount.toFixed(2)} refunded to your wallet.`,
+                        createdAt: Date.now()
+                    });
+                } else {
+                    // Completed — just notify user
+                    await push(ref(database, 'notifications/' + orderUserId), {
+                        title: 'Order Completed',
+                        message: `Order #${orderId} has been completed successfully.`,
+                        createdAt: Date.now()
+                    });
+                }
+
+                // Move to history node
+                const historyData = {
+                    ...order,
+                    status: newStatus,
+                    completedAt: Date.now()
+                };
+                await set(ref(database, 'order_history/' + orderKey), historyData);
+
+                // Remove from active orders
+                await remove(ref(database, 'orders/' + orderKey));
+
+                // Log the action
+                await push(ref(database, 'admin_logs'), {
+                    action: newStatus === 'canceled' ? 'order_canceled' : 'order_completed',
+                    userId: orderUserId,
+                    userEmail: userEmail,
+                    amount: orderAmount,
+                    oldBalance: 0,
+                    newBalance: 0,
+                    orderId: orderId,
+                    createdAt: Date.now()
+                });
+
+                hideLoading();
+                showToast(
+                    newStatus === 'canceled' ? 'Order Canceled & Refunded' : 'Order Completed',
+                    newStatus === 'canceled'
+                        ? `₹${orderAmount.toFixed(2)} refunded to user.`
+                        : `Order #${orderId} archived.`
+                );
+            } catch (err) {
+                hideLoading();
+                showToast('error', 'Update Failed', err.message);
+            }
+        }
+        window.confirmStatusUpdate = confirmStatusUpdate;
+
+        // ============================================
+        // DELETE ORDER (Active order deletion with refund)
+        // ============================================
+        window.deleteOrder = async function(orderKey) {
+            if (!confirm('Delete this order? The amount will be refunded to the user (if not completed).')) return;
+            const order = allOrders.find(o => o.key === orderKey);
+            if (!order) return;
+
+            showLoading();
+            try {
+                const orderAmount = parseFloat(order.amount || 0);
+                const orderId = order.orderId || orderKey.slice(0, 8);
+
+                // Refund user
+                const userRef = ref(database, 'users/' + order.userId);
+                const userSnap = await get(userRef);
+                const currentBal = parseFloat(userSnap.val()?.balance || 0);
+                const newBal = currentBal + orderAmount;
+
+                await update(userRef, { balance: newBal });
+
+                await push(ref(database, 'admin_logs'), {
+                    action: 'refund',
+                    userId: order.userId,
+                    userEmail: order.userEmail,
+                    amount: orderAmount,
+                    oldBalance: currentBal,
+                    newBalance: newBal,
+                    orderId: orderId,
+                    createdAt: Date.now()
+                });
+
+                await push(ref(database, 'notifications/' + order.userId), {
+                    title: 'Order Deleted & Refunded',
+                    message: `Order #${orderId} was removed. ₹${orderAmount.toFixed(2)} refunded.`,
+                    createdAt: Date.now()
+                });
+
+                // Remove from active orders
+                await remove(ref(database, 'orders/' + orderKey));
+
+                hideLoading();
+                showToast('success', 'Order Deleted', 'Refund processed to user.');
+            } catch (err) {
+                hideLoading();
+                showToast('error', 'Delete Failed', err.message);
+            }
+        };
+
+        // ============================================
+        // TABS
+        // ============================================
+        window.switchTab = function(tab, btn) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tab + 'Section').classList.add('active');
+            if (btn) btn.classList.add('active');
+            if (tab === 'orders') {
+                document.getElementById('orderCountBadge').style.display = 'none';
+            }
+        };
+
+        // ============================================
+        // REAL-TIME LISTENERS
+        // ============================================
+        updateConnectionStatus(true);
+
+        onValue(ref(database, 'users'), (snap) => {
+            allUsers = [];
+            if (snap.exists()) snap.forEach(c => allUsers.push({ uid: c.key, ...c.val() }));
+            renderUsers(document.getElementById('userSearch')?.value || '');
+            updateStats();
+            updateConnectionStatus(true);
+        }, (err) => { console.error(err); updateConnectionStatus(false); });
+
+        onValue(ref(database, 'orders'), (snap) => {
+            const newOrders = [];
+            allOrders = [];
+            if (snap.exists()) snap.forEach(c => {
+                const o = { key: c.key, ...c.val() };
+                allOrders.push(o);
+                if (!isFirstLoad && !previousActiveKeys.has(c.key)) {
+                    newOrders.push(o);
+                }
+            });
+            allOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            renderOrders(document.getElementById('orderSearch')?.value || '');
+            updateStats();
+
+            // Notify new orders
+            if (newOrders.length > 0 && !isFirstLoad) {
+                newOrders.forEach(o => {
+                    showToast('success', '🔔 New Order', `#${o.orderId || 'N/A'} · ${(o.service || '').substring(0, 32)} · ₹${(o.amount || 0).toFixed(2)}`);
+                });
+                const ordersSection = document.getElementById('ordersSection');
+                if (!ordersSection.classList.contains('active')) {
+                    const badge = document.getElementById('orderCountBadge');
+                    const current = parseInt(badge.textContent) || 0;
+                    badge.textContent = current + newOrders.length;
+                    badge.style.display = 'inline-block';
+                }
+            }
+
+            previousActiveKeys = new Set(allOrders.map(o => o.key));
+            isFirstLoad = false;
+            updateConnectionStatus(true);
+        }, (err) => { console.error(err); updateConnectionStatus(false); });
+
+        onValue(ref(database, 'order_history'), (snap) => {
+            allHistory = [];
+            if (snap.exists()) snap.forEach(c => allHistory.push({ key: c.key, ...c.val() }));
+            allHistory.sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+            renderHistory();
+            updateStats();
+        });
+
+        onValue(ref(database, 'deposits'), (snap) => {
+            allDeposits = [];
+            if (snap.exists()) snap.forEach(c => allDeposits.push({ key: c.key, ...c.val() }));
+            allDeposits.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            renderDeposits();
+            updateStats();
+        });
+
+        onValue(ref(database, 'admin_logs'), (snap) => {
+            allLogs = [];
+            if (snap.exists()) snap.forEach(c => allLogs.push({ key: c.key, ...c.val() }));
+            allLogs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            renderLogs();
+        });
+
+        document.getElementById('modalConfirmBtn').addEventListener('click', confirmBalanceUpdate);
+        document.getElementById('balanceInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') confirmBalanceUpdate();
+        });
+
+        loadAllData().then(() => {
+            showToast('info', 'Admin Panel', 'Live sync active · Orders update in real time.');
+        });
+    </script>
+</body>
+</html>

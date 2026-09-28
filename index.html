@@ -2,255 +2,353 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMM Panel - User Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aayan SMM · Premium SMM Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
 
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; position: relative; }
+        :root {
+            --primary: #4caf50;
+            --primary-dark: #2e7d32;
+            --primary-light: #e8f5e9;
+            --gradient: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+            --bg-glass: #ffffff;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+            --text-main: #1e1b2e;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
 
+        body {
+            background: #f0f7f0;
+            min-height: 100vh;
+            position: relative;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Splash */
         .splash-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 10005; color: white; transition: opacity 0.5s ease, visibility 0.5s;
+            position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #ffffff; z-index: 10005; color: var(--primary); transition: opacity 0.6s ease, visibility 0.6s;
         }
         .splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .splash-logo { font-size: 65px; margin-bottom: 20px; animation: rocketFloat 2s ease-in-out infinite; }
-        .splash-title { font-size: 32px; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; }
-        .splash-subtitle { font-size: 14px; opacity: 0.8; }
-        @keyframes rocketFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(5deg); } }
+        .splash-logo { font-size: 60px; margin-bottom: 18px; animation: floatRocket 2.2s ease-in-out infinite; }
+        .splash-title { font-size: 34px; font-weight: 800; color: var(--primary-dark); }
+        .splash-subtitle { font-size: 14px; color: var(--text-muted); margin-top: 6px; letter-spacing: 1px; }
+        @keyframes floatRocket { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
 
+        /* Loader */
         .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center;
-            z-index: 9999; backdrop-filter: blur(5px);
+            position: fixed; inset: 0; background: rgba(10, 8, 30, 0.85); display: none; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(12px);
         }
         .loading-overlay.active { display: flex; }
         .loader-container { text-align: center; }
         .loader {
-            width: 80px; height: 80px; border: 6px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #667eea; border-right-color: #764ba2;
-            border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;
+            width: 64px; height: 64px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #4caf50; border-right-color: #8bc34a;
+            border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color: white; margin-top: 25px; font-size: 18px; font-weight: 600; }
-        .loading-subtext { color: rgba(255, 255, 255, 0.7); margin-top: 10px; font-size: 14px; }
+        .loading-text { color: white; margin-top: 22px; font-size: 17px; font-weight: 700; }
+        .loading-subtext { color: rgba(255,255,255,0.5); margin-top: 8px; font-size: 13px; }
 
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; max-width: 400px; }
+        /* Toasts */
+        .toast-container { position: fixed; top: 18px; right: 18px; z-index: 10000; max-width: 360px; }
         .toast {
-            background: white; padding: 18px 24px; border-radius: 14px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3); margin-bottom: 15px;
-            display: flex; align-items: center; gap: 15px; min-width: 320px;
-            animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            position: relative; overflow: hidden;
+            background: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            margin-bottom: 12px; display: flex; align-items: center; gap: 14px; min-width: 280px;
+            animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); position: relative; overflow: hidden;
         }
         .toast::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; }
-        .toast.success::before { background: linear-gradient(180deg, #10b981 0%, #059669 100%); }
-        .toast.error::before { background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); }
-        .toast.warning::before { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
-        .toast.info::before { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); }
-        @keyframes slideInRight { from { transform: translateX(450px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.success::before { background: var(--primary); }
+        .toast.error::before { background: #ef4444; }
+        .toast.warning::before { background: #f59e0b; }
+        .toast.info::before { background: #3b82f6; }
+        @keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .toast-content { flex: 1; }
-        .toast-title { font-weight: 700; color: #1f2937; margin-bottom: 4px; font-size: 15px; }
-        .toast-message { font-size: 13px; color: #6b7280; }
-        .toast-close { cursor: pointer; color: #9ca3af; font-size: 20px; font-weight: bold; }
+        .toast-title { font-weight: 700; color: var(--text-main); font-size: 14px; margin-bottom: 3px; }
+        .toast-message { font-size: 12.5px; color: var(--text-muted); }
+        .toast-close { cursor: pointer; color: #9ca3af; font-size: 20px; }
 
-        .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .auth-box {
-            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px);
-            border-radius: 25px; padding: 50px; box-shadow: 0 25px 70px rgba(0,0,0,0.4);
-            width: 100%; max-width: 450px; animation: slideUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        /* Auth */
+        .auth-container {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
+            background: #f0f7f0;
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .auth-box h1 { text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; font-size: 38px; font-weight: 800; }
-        .auth-box .subtitle { text-align: center; color: #6b7280; margin-bottom: 35px; font-size: 15px; }
-        .tab-buttons { display: flex; gap: 12px; margin-bottom: 35px; background: #f3f4f6; padding: 6px; border-radius: 14px; }
-        .tab-btn { flex: 1; padding: 13px; border: none; background: transparent; cursor: pointer; border-radius: 10px; font-size: 16px; font-weight: 700; color: #6b7280; transition: all 0.3s; }
-        .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .auth-box {
+            background: #ffffff; border-radius: var(--radius-lg); padding: 32px 28px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06); width: 100%; max-width: 400px;
+            animation: slideUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .auth-header { text-align: center; margin-bottom: 24px; }
+        .auth-header h1 {
+            font-size: 28px; font-weight: 800; color: var(--primary-dark); margin-bottom: 4px;
+        }
+        .auth-header p { color: var(--text-muted); font-size: 13px; }
+
+        .google-btn {
+            width: 100%; padding: 12px; background: white; color: #374151; border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 10px; transition: all 0.25s; margin-bottom: 16px;
+        }
+        .google-btn:hover { background: #f9fafb; border-color: #d1d5db; }
+        .google-btn i { color: #DB4437; font-size: 18px; }
+        .divider { display: flex; align-items: center; gap: 12px; color: #9ca3af; font-size: 12px; margin-bottom: 16px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
+
+        .tab-buttons { display: flex; gap: 6px; margin-bottom: 20px; background: #f3f4f6; padding: 5px; border-radius: var(--radius-sm); }
+        .tab-btn {
+            flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 8px;
+            font-size: 13.5px; font-weight: 700; color: var(--text-muted); transition: all 0.25s;
+        }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 14px rgba(76, 175, 80, 0.3); }
+
         .auth-form { display: none; }
         .auth-form.active { display: block; }
-        .form-group { margin-bottom: 22px; }
-        .form-group label { display: block; margin-bottom: 10px; color: #374151; font-weight: 600; font-size: 14px; }
-        .form-group input { width: 100%; padding: 15px 18px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 15px; background: #f9fafb; }
-        .form-group input:focus { outline: none; border-color: #667eea; background: white; }
-        .btn-primary { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 7px; color: var(--text-main); font-weight: 600; font-size: 13px; }
+        .form-group input {
+            width: 100%; padding: 13px 15px; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); font-size: 14px;
+            background: #f9fafb; transition: border-color 0.2s;
+        }
+        .form-group input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1); }
+        .btn-primary {
+            width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm);
+            font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 6px;
+        }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3); }
 
+        /* Dashboard */
         .dashboard { display: none; }
         .dashboard.active { display: block; }
+        
         .header {
-            background: rgba(255, 255, 255, 0.98); padding: 18px 25px;
+            background: #ffffff; padding: 14px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 100;
             flex-wrap: wrap; gap: 10px;
         }
-        .header-left { display: flex; align-items: center; gap: 18px; }
-        .menu-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; width: 48px; height: 48px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .logo { font-size: 26px; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .balance-display { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 26px; border-radius: 25px; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
-
-        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 998; display: none; }
-        .drawer-overlay.active { display: block; }
-        .drawer { position: fixed; top: 0; left: -320px; width: 300px; height: 100%; background: white; z-index: 999; transition: left 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 4px 0 30px rgba(0,0,0,0.3); }
-        .drawer.active { left: 0; }
-        .drawer-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 25px; }
-        .drawer-header h3 { font-size: 23px; font-weight: 800; }
-        .drawer-menu { padding: 22px 0; }
-        .drawer-item { padding: 17px 25px; cursor: pointer; display: flex; align-items: center; gap: 16px; color: #374151; font-weight: 600; margin: 6px 15px; border-radius: 12px; transition: all 0.3s; }
-        .drawer-item:hover { background: #f3f4f6; transform: translateX(5px); }
-        .drawer-item.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .logout-btn { position: absolute; bottom: 25px; left: 25px; right: 25px; padding: 15px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
-
-        .main-content { padding: 25px; max-width: 1400px; margin: 0 auto; }
-        .content-section { display: none; }
-        .content-section.active { display: block; animation: fadeInUp 0.4s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .section-title { font-size: 30px; color: white; margin-bottom: 28px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
-
-        .form-card, .orders-container, .support-card, .calculator-section, .deposit-card {
-            background: rgba(255, 255, 255, 0.98); border-radius: 22px; padding: 38px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15); max-width: 850px; margin: 0 auto;
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .menu-btn {
+            background: var(--primary); border: none; color: white; width: 40px; height: 40px; border-radius: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .logo { font-size: 22px; font-weight: 800; color: #e65100; }
+        .balance-display {
+            background: var(--primary); color: white; padding: 8px 16px; border-radius: 20px;
+            font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px;
         }
 
-        .select-wrapper { margin-bottom: 25px; position: relative; }
-        .select-wrapper label { display: block; margin-bottom: 10px; color: #374151; font-weight: 600; font-size: 15px; }
-        .select-wrapper label i { margin-right: 8px; color: #667eea; }
-        select { width: 100%; padding: 15px 18px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 15px; background: #f9fafb; appearance: none; cursor: pointer; transition: border-color 0.3s; }
-        select:focus { outline: none; border-color: #667eea; background: white; }
-        select option { padding: 10px; }
+        /* Drawer */
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
+        .drawer-overlay.active { display: block; }
+        .drawer {
+            position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 999;
+            transition: left 0.3s ease; box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+        }
+        .drawer.active { left: 0; }
+        .drawer-header { background: var(--primary); color: white; padding: 24px 20px; }
+        .drawer-header h3 { font-size: 18px; font-weight: 800; }
+        .drawer-header p { font-size: 12px; opacity: 0.9; margin-top: 3px; word-break: break-all; }
+        .drawer-menu { padding: 16px 0; flex: 1; overflow-y: auto; }
+        .drawer-item {
+            padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 14px;
+            color: var(--text-main); font-weight: 600; font-size: 14px; margin: 2px 12px; border-radius: 10px; transition: all 0.2s;
+        }
+        .drawer-item:hover { background: #f3f4f6; }
+        .drawer-item.active { background: var(--primary-light); color: var(--primary-dark); }
+        .drawer-item i { width: 20px; text-align: center; font-size: 16px; }
+        .logout-btn {
+            margin: 16px 12px 24px; padding: 14px; background: #ef4444; color: white;
+            border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; display: flex;
+            align-items: center; justify-content: center; gap: 9px;
+        }
 
+        /* Main content */
+        .main-content { padding: 20px; max-width: 1300px; margin: 0 auto; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeInUp 0.3s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .section-title {
+            font-size: 20px; color: var(--text-main); margin-bottom: 16px; font-weight: 800; display: flex; align-items: center; gap: 10px;
+        }
+
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--primary); color: white; padding: 16px; border-radius: var(--radius-md);
+            display: flex; flex-direction: column; justify-content: space-between; min-height: 90px;
+        }
+        .stat-card .stat-label { font-size: 13px; font-weight: 500; opacity: 0.9; }
+        .stat-card .stat-value { font-size: 22px; font-weight: 800; text-align: right; }
+
+        /* Compact Cards */
+        .form-card, .orders-container, .support-card, .calculator-section, .deposit-card {
+            background: #ffffff; border-radius: var(--radius-md); padding: 20px;
+            box-shadow: var(--card-shadow); max-width: 900px; margin: 0 auto; border: 1px solid var(--border-color);
+        }
+
+        .step-badge {
+            display: inline-flex; align-items: center; gap: 6px; background: var(--primary-light); color: var(--primary-dark); padding: 6px 12px;
+            border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 16px;
+        }
+
+        /* Category & Service Grid */
         .category-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px;
         }
         .category-btn {
-            padding: 14px 18px; border: 2px solid #e5e7eb; border-radius: 12px;
-            background: white; cursor: pointer; font-weight: 600; font-size: 14px;
-            transition: all 0.3s; text-align: center; color: #374151;
+            padding: 12px 8px; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); background: white;
+            cursor: pointer; font-weight: 700; font-size: 12.5px; transition: all 0.2s; text-align: center; color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
         }
-        .category-btn:hover { border-color: #667eea; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102,126,234,0.15); }
-        .category-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #667eea; }
-        .category-btn i { margin-right: 8px; }
+        .category-btn i { font-size: 18px; color: var(--primary); }
+        .category-btn:hover { border-color: var(--primary); background: #f9fafb; }
+        .category-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .category-btn.active i { color: white; }
 
-        .service-list { display: none; margin-top: 15px; }
+        .service-list { display: none; margin-top: 8px; }
         .service-list.active { display: block; }
-        .service-item {
-            padding: 14px 18px; border: 1px solid #e5e7eb; border-radius: 10px;
-            margin-bottom: 10px; cursor: pointer; transition: all 0.3s;
-            display: flex; justify-content: space-between; align-items: center;
-            background: #fafafa;
+        .service-scroll {
+            max-height: 220px; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 8px;
         }
-        .service-item:hover { border-color: #667eea; background: #f0f0ff; transform: translateX(5px); }
-        .service-item.selected { border-color: #667eea; background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%); }
-        .service-item .s-name { font-weight: 600; color: #1f2937; }
-        .service-item .s-price { font-weight: 700; color: #764ba2; font-size: 15px; }
-        .service-item .s-id { font-size: 12px; color: #9ca3af; margin-right: 10px; }
+        .service-scroll::-webkit-scrollbar { width: 5px; }
+        .service-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .service-item {
+            padding: 12px 14px; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm);
+            cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center;
+            background: white; gap: 8px; flex-wrap: wrap;
+        }
+        .service-item:hover { border-color: var(--primary); background: #f9fafb; }
+        .service-item.selected { border-color: var(--primary); background: var(--primary-light); }
+        .service-item .s-name { font-weight: 600; color: var(--text-main); font-size: 13px; flex: 1; min-width: 120px; }
+        .service-item .s-price { font-weight: 800; color: var(--primary-dark); font-size: 13px; white-space: nowrap; }
+        .service-item .s-id { font-size: 11px; color: var(--text-muted); background: #f3f4f6; padding: 2px 8px; border-radius: 20px; }
 
         .package-card {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
-            border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 18px; padding: 28px; margin: 28px 0;
+            background: #f9fafb; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin: 16px 0;
         }
-        .package-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .package-name { font-size: 21px; font-weight: 800; color: #667eea; }
-        .package-price { font-size: 28px; font-weight: 800; color: #764ba2; }
-        .package-description { color: #374151; font-size: 14px; white-space: pre-line; line-height: 1.8; }
-        .package-info { background: white; padding: 20px; border-radius: 14px; margin-top: 18px; }
-        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+        .package-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .package-name { font-size: 15px; font-weight: 800; color: var(--text-main); }
+        .package-price { font-size: 18px; font-weight: 800; color: var(--primary-dark); }
+        .package-description { color: var(--text-muted); font-size: 12.5px; line-height: 1.7; white-space: pre-line; }
+        .package-info { background: white; padding: 12px; border-radius: var(--radius-sm); margin-top: 12px; }
+        .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
         .info-row:last-child { border-bottom: none; }
-        .info-label { color: #6b7280; }
-        .info-value { color: #1f2937; font-weight: 600; }
+        .info-label { color: var(--text-muted); }
+        .info-value { color: var(--text-main); font-weight: 700; }
 
-        .input-group { margin-bottom: 25px; }
-        .input-group label { display: block; margin-bottom: 10px; color: #374151; font-weight: 600; }
-        .input-group label i { margin-right: 8px; color: #667eea; }
-        .input-group input { width: 100%; padding: 15px 18px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 15px; background: #f9fafb; }
-        .input-group input:focus { outline: none; border-color: #667eea; background: white; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; margin-bottom: 7px; color: var(--text-main); font-weight: 600; font-size: 13px; }
+        .input-group input {
+            width: 100%; padding: 13px 15px; border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); font-size: 14px; background: #f9fafb;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1); }
 
         .total-charge {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white; padding: 28px; border-radius: 16px; text-align: center; margin: 28px 0;
+            background: var(--primary); color: white; padding: 18px; border-radius: var(--radius-md);
+            text-align: center; margin: 16px 0;
         }
-        .total-charge-label { font-size: 16px; opacity: 0.9; }
-        .total-charge-amount { font-size: 46px; font-weight: 800; }
+        .total-charge-label { font-size: 13px; opacity: 0.9; }
+        .total-charge-amount { font-size: 32px; font-weight: 800; }
 
         .btn-submit {
-            width: 100%; padding: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 700;
-            cursor: pointer; transition: all 0.3s;
+            width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm);
+            font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s;
         }
-        .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5); }
+        .btn-submit:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3); }
 
-        .mobile-orders-list { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
-        .order-mobile-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .order-mobile-card:hover { transform: translateY(-2px); }
-        .card-row-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #f3f4f6; padding-bottom: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-        .card-order-id { font-weight: 800; color: #4b5563; font-size: 15px; }
-        .card-row-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-        .card-label { color: #6b7280; font-weight: 500; }
-        .card-value { color: #1f2937; font-weight: 700; text-align: right; }
-        .card-value a { color: #667eea; text-decoration: none; font-weight: 600; }
+        /* Orders */
+        .mobile-orders-list { display: flex; flex-direction: column; gap: 12px; }
+        .order-mobile-card {
+            background: white; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .card-row-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .card-order-id { font-weight: 800; color: var(--text-main); font-size: 13.5px; }
+        .card-row-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+        .card-label { color: var(--text-muted); }
+        .card-value { color: var(--text-main); font-weight: 700; text-align: right; }
+        .card-value a { color: var(--primary); text-decoration: none; font-weight: 600; }
 
-        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
+        .status-badge { padding: 4px 11px; border-radius: 20px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px; }
         .status-pending { background: #fef3c7; color: #d97706; }
         .status-processing { background: #dbeafe; color: #1d4ed8; }
         .status-completed { background: #d1fae5; color: #059669; }
         .status-canceled { background: #fee2e2; color: #dc2626; }
 
-        .razorpay-notice-box { background: linear-gradient(135deg, #2b3a80 0%, #172254 100%); text-align: left; padding: 22px; border-radius: 16px; color: white; margin-bottom: 25px; }
-        .razorpay-notice-box h4 { font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-        .razorpay-notice-box p { font-size: 13px; opacity: 0.85; line-height: 1.6; }
+        .razorpay-notice-box {
+            background: #1e293b; text-align: left; padding: 18px; border-radius: var(--radius-md);
+            color: white; margin-bottom: 18px;
+        }
+        .razorpay-notice-box h4 { font-size: 15px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .razorpay-notice-box p { font-size: 12px; opacity: 0.85; line-height: 1.6; }
 
-        .support-links-box { display: flex; flex-direction: column; gap: 15px; margin-top: 25px; text-align: left; }
-        .support-hyperlink { display: flex; align-items: center; gap: 12px; color: #4b5563; text-decoration: none; padding: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 14px; font-weight: 600; font-size: 15px; transition: all 0.3s; }
-        .support-hyperlink:hover { background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border-color: #667eea; color: #667eea; transform: translateX(4px); }
-        .support-hyperlink i { font-size: 18px; color: #667eea; }
+        .support-links-box { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+        .support-hyperlink {
+            display: flex; align-items: center; gap: 12px; color: var(--text-main); text-decoration: none; padding: 14px 16px;
+            background: #f9fafb; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-weight: 600; font-size: 13.5px;
+            transition: all 0.2s;
+        }
+        .support-hyperlink:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+        .support-hyperlink i { font-size: 16px; color: var(--primary); }
 
-        .calculator-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 28px; }
-        .calculator-result { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 35px; border-radius: 18px; text-align: center; }
-        .result-value { font-size: 52px; font-weight: 800; }
-        .result-breakdown { margin-top: 25px; display: flex; justify-content: space-around; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.25); padding-top: 25px; flex-wrap: wrap; gap: 15px; }
+        .calculator-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+        .calculator-result {
+            background: var(--primary); color: white; padding: 24px; border-radius: var(--radius-md); text-align: center;
+        }
+        .result-value { font-size: 32px; font-weight: 800; }
+        .result-breakdown { margin-top: 16px; display: flex; justify-content: space-around; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.25); padding-top: 16px; flex-wrap: wrap; gap: 12px; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
-        .modal-content { background: white; padding: 38px; border-radius: 22px; max-width: 450px; width: 90%; text-align: center; }
-        .modal-icon { font-size: 70px; margin-bottom: 18px; }
-        .modal-icon.success { color: #10b981; }
+        .modal-content { background: white; padding: 28px; border-radius: var(--radius-lg); max-width: 380px; width: 90%; text-align: center; animation: popIn 0.3s ease; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-icon { font-size: 50px; margin-bottom: 14px; }
+        .modal-icon.success { color: var(--primary); }
         .modal-icon.error { color: #ef4444; }
-        .modal-btn { padding: 14px 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; margin: 5px; }
-        .btn-add-funds { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .modal-btn { padding: 12px 28px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; margin: 5px; font-size: 14px; }
+        .btn-add-funds { background: var(--primary-dark); }
 
-        .no-services { text-align: center; padding: 30px; color: #9ca3af; }
-
-        .service-count { font-size: 13px; color: #6b7280; margin-left: 10px; }
+        .no-services { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+        .service-count { font-size: 12px; color: var(--text-muted); margin-left: 6px; font-weight: 500; }
 
         @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
             .calculator-inputs { grid-template-columns: 1fr; }
-            .auth-box, .form-card, .support-card { padding: 25px; }
-            .balance-display { padding: 8px 16px; font-size: 14px; }
-            .header { padding: 12px 15px; }
-            .logo { font-size: 20px; }
+            .auth-box, .form-card, .support-card, .deposit-card, .calculator-section { padding: 16px; }
+            .balance-display { padding: 6px 12px; font-size: 12px; }
+            .header { padding: 10px 14px; }
+            .logo { font-size: 18px; }
             .package-header { flex-direction: column; align-items: flex-start; }
-            .package-price { font-size: 20px; }
-            .total-charge-amount { font-size: 32px; }
-            .result-value { font-size: 36px; }
+            .package-price { font-size: 16px; }
+            .total-charge-amount { font-size: 26px; }
+            .result-value { font-size: 26px; }
             .toast { min-width: auto; max-width: 90%; }
-            .drawer { width: 280px; left: -300px; }
-            .category-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-            .service-item { flex-wrap: wrap; gap: 8px; }
+            .drawer { width: 260px; left: -280px; }
+            .category-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+            .section-title { font-size: 18px; }
         }
     </style>
 </head>
 <body>
 
     <div class="splash-screen" id="splashScreen">
-        <div class="splash-logo"><i class="fas fa-rocket"></i></div>
-        <div class="splash-title">SMM Panel</div>
-        <div class="splash-subtitle">Loading secure environment...</div>
+        <div class="splash-logo"><i class="fas fa-crown"></i></div>
+        <div class="splash-title">Aayan SMM</div>
+        <div class="splash-subtitle">Loading premium services...</div>
     </div>
 
     <div class="loading-overlay" id="loadingOverlay">
@@ -263,60 +361,74 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Auth -->
     <div class="auth-container" id="authContainer" style="display: none;">
         <div class="auth-box">
-            <h1><i class="fas fa-rocket"></i> SMM Panel</h1>
-            <p class="subtitle">Grow Your Social Media Presence</p>
-            
+            <div class="auth-header">
+                <h1>Aayan SMM</h1>
+                <p>Cheapest Price, Highest Quality, Fastest Delivery, 24/7 Support</p>
+            </div>
+
+            <button class="google-btn" id="googleSignInBtn">
+                <i class="fab fa-google"></i> Continue with Google
+            </button>
+            <div class="divider">or use email</div>
+
             <div class="tab-buttons">
-                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn active" onclick="switchTab('login')">Log In</button>
                 <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
             </div>
 
             <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    <label><i class="fas fa-user"></i> Username or Email</label>
+                    <input type="email" id="loginEmail" placeholder="Username or Email" required>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
                 </div>
-                <button type="submit" class="btn-primary" id="loginBtn">Login</button>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;font-size:13px;color:var(--text-muted);">
+                    <input type="checkbox" id="rememberMe" style="width:auto;" checked>
+                    <label for="rememberMe" style="font-weight:400;margin:0;">Remember me</label>
+                </div>
+                <button type="submit" class="btn-primary" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Log In</button>
+                <div style="text-align:center;margin-top:14px;font-size:13px;">
+                    <a href="#" style="color:var(--primary);text-decoration:none;font-weight:600;">Forgot Password?</a>
+                </div>
             </form>
 
             <form class="auth-form" id="signupForm" onsubmit="handleSignup(event)">
                 <div class="form-group">
                     <label><i class="fas fa-user"></i> Full Name</label>
-                    <input type="text" id="signupName" placeholder="Enter your name" required>
+                    <input type="text" id="signupName" placeholder="Your name" required>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-envelope"></i> Email Address</label>
-                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    <input type="email" id="signupEmail" placeholder="you@example.com" required>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="signupPassword" placeholder="Create password (min 6 chars)" required>
+                    <input type="password" id="signupPassword" placeholder="Min 6 characters" required>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-lock"></i> Confirm Password</label>
-                    <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" required>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm password" required>
                 </div>
                 <button type="submit" class="btn-primary" id="signupBtn">Create Account</button>
             </form>
         </div>
     </div>
 
+    <!-- Dashboard -->
     <div class="dashboard" id="dashboard">
         <div class="header">
             <div class="header-left">
-                <button class="menu-btn" onclick="toggleDrawer()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="logo">SMM Panel</div>
+                <button class="menu-btn" onclick="toggleDrawer()"><i class="fas fa-bars"></i></button>
+                <div class="logo">Aayan SMM</div>
             </div>
             <div class="balance-display">
-                <i class="fas fa-wallet"></i> Balance: ₹<span id="userBalance">0.00</span>
+                <i class="fas fa-wallet"></i> ₹<span id="userBalance">0.00</span>
             </div>
         </div>
 
@@ -324,99 +436,93 @@
 
         <div class="drawer" id="drawer">
             <div class="drawer-header">
-                <h3 id="drawerUserName">Welcome User</h3>
+                <h3 id="drawerUserName">Welcome</h3>
                 <p id="drawerUserEmail">user@example.com</p>
             </div>
             <div class="drawer-menu">
                 <div class="drawer-item active" onclick="switchSection('newOrder')">
-                    <span class="drawer-item-icon"><i class="fas fa-plus-circle"></i></span>
-                    <span>New Order</span>
+                    <i class="fas fa-plus-circle"></i><span>New Order</span>
                 </div>
                 <div class="drawer-item" onclick="switchSection('orders')">
-                    <span class="drawer-item-icon"><i class="fas fa-shopping-cart"></i></span>
-                    <span>My Orders</span>
+                    <i class="fas fa-shopping-cart"></i><span>Orders</span>
                 </div>
                 <div class="drawer-item" onclick="switchSection('calculator')">
-                    <span class="drawer-item-icon"><i class="fas fa-calculator"></i></span>
-                    <span>Price Calculator</span>
+                    <i class="fas fa-calculator"></i><span>Price Calculator</span>
                 </div>
                 <div class="drawer-item" onclick="switchSection('deposit')">
-                    <span class="drawer-item-icon"><i class="fas fa-money-bill-wave"></i></span>
-                    <span>Deposit (Razorpay)</span>
+                    <i class="fas fa-money-bill-wave"></i><span>Add Funds</span>
                 </div>
                 <div class="drawer-item" onclick="switchSection('support')">
-                    <span class="drawer-item-icon"><i class="fas fa-headset"></i></span>
-                    <span>Support</span>
+                    <i class="fas fa-headset"></i><span>Support</span>
                 </div>
             </div>
-            <button class="logout-btn" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
+            <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
 
         <div class="main-content">
-            
+            <!-- New Order -->
             <div class="content-section active" id="newOrderSection">
-                <h2 class="section-title"><i class="fas fa-plus-circle"></i> Create New Order</h2>
-                <div class="form-card">
-                    <div style="text-align:center;padding:12px;background:#d1fae5;border-radius:10px;margin-bottom:20px;color:#065f46;font-weight:600;">
-                        ✅ Select Category → Choose Service → Enter Details → Place Order
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Spent</div>
+                        <div class="stat-value">₹<span id="totalSpent">0</span></div>
                     </div>
-                    
-                    <form class="order-form" onsubmit="handleOrderSubmit(event)">
-                        <!-- STEP 1: CATEGORY SELECTION -->
+                    <div class="stat-card">
+                        <div class="stat-label">Total Orders</div>
+                        <div class="stat-value" id="totalOrders">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Balance</div>
+                        <div class="stat-value">₹<span id="totalBalance">0</span></div>
+                    </div>
+                </div>
+
+                <h2 class="section-title"><i class="fas fa-plus-circle"></i> New Order</h2>
+                <div class="form-card">
+                    <div class="step-badge"><i class="fas fa-chevron-right"></i> Select Category → Service → Details</div>
+                    <form onsubmit="handleOrderSubmit(event)">
                         <div class="select-wrapper">
-                            <label><i class="fas fa-th-large"></i> Step 1: Select Category</label>
-                            <div class="category-grid" id="categoryGrid">
-                                <!-- Categories will be loaded here -->
-                            </div>
+                            <label style="display:block;margin-bottom:10px;color:var(--text-main);font-weight:600;font-size:13px;"><i class="fas fa-th-large"></i> Category</label>
+                            <div class="category-grid" id="categoryGrid"></div>
                         </div>
 
-                        <!-- STEP 2: SERVICE SELECTION -->
                         <div class="select-wrapper" id="serviceWrapper" style="display:none;">
-                            <label><i class="fas fa-list"></i> Step 2: Select Service <span class="service-count" id="serviceCount"></span></label>
-                            <div id="serviceListContainer">
-                                <!-- Services will be loaded here -->
-                            </div>
+                            <label style="display:block;margin-bottom:10px;color:var(--text-main);font-weight:600;font-size:13px;"><i class="fas fa-list"></i> Service <span class="service-count" id="serviceCount"></span></label>
+                            <div class="service-scroll" id="serviceListContainer"></div>
                         </div>
 
-                        <!-- STEP 3: ORDER DETAILS -->
                         <div id="orderDetails" style="display:none;">
                             <div class="package-card">
                                 <div class="package-header">
-                                    <div class="package-name" id="packageName">Select a service</div>
-                                    <div class="package-price">₹<span id="packagePrice">0</span> / unit</div>
+                                    <div class="package-name" id="packageName">—</div>
+                                    <div class="package-price">₹<span id="packagePrice">0</span>/1K</div>
                                 </div>
                                 <div class="package-description" id="packageDescription"></div>
                                 <div class="package-info">
                                     <div class="info-row"><span class="info-label">Category</span><span class="info-value" id="serviceCategory"></span></div>
-                                    <div class="info-row"><span class="info-label">Min Order</span><span class="info-value" id="minOrder">10</span></div>
-                                    <div class="info-row"><span class="info-label">Max Order</span><span class="info-value" id="maxOrder">10000</span></div>
+                                    <div class="info-row"><span class="info-label">Min / Max</span><span class="info-value" id="minMaxOrder">10 / 10000</span></div>
                                     <div class="info-row"><span class="info-label">Service ID</span><span class="info-value" id="serviceIdDisplay">-</span></div>
                                 </div>
                             </div>
-
                             <div class="input-group">
                                 <label><i class="fas fa-link"></i> Target URL</label>
-                                <input type="url" id="orderLink" placeholder="https://www.instagram.com/... or https://www.youtube.com/..." required>
+                                <input type="url" id="orderLink" placeholder="https://..." required>
                             </div>
-
                             <div class="input-group">
-                                <label><i class="fas fa-hashtag"></i> Quantity</label>
-                                <input type="number" id="orderQuantity" placeholder="Enter quantity" oninput="calculateTotal()" required>
+                                <label><i class="fas fa-hashtag"></i> Quantity (exact followers/views/likes)</label>
+                                <input type="number" id="orderQuantity" placeholder="e.g. 1000" oninput="calculateTotal()" required>
                             </div>
-
                             <div class="total-charge">
                                 <div class="total-charge-label">Total Charge</div>
                                 <div class="total-charge-amount">₹<span id="totalCharge">0.00</span></div>
                             </div>
-
-                            <button type="submit" class="btn-submit" id="orderSubmitBtn"><i class="fas fa-rocket"></i> Place Order</button>
+                            <button type="submit" class="btn-submit"><i class="fas fa-rocket"></i> Submit Order</button>
                         </div>
                     </form>
                 </div>
             </div>
 
+            <!-- Orders -->
             <div class="content-section" id="ordersSection">
                 <h2 class="section-title"><i class="fas fa-shopping-cart"></i> My Orders</h2>
                 <div class="orders-container">
@@ -424,78 +530,73 @@
                 </div>
             </div>
 
+            <!-- Calculator -->
             <div class="content-section" id="calculatorSection">
                 <h2 class="section-title"><i class="fas fa-calculator"></i> Price Calculator</h2>
                 <div class="calculator-section">
-                    <h3 style="margin-bottom:20px;color:#374151;">Calculate Your Order Cost</h3>
                     <div class="calculator-inputs">
-                        <div class="select-wrapper">
-                            <label><i class="fas fa-list"></i> Select Service</label>
-                            <select id="calcService" onchange="updateCalculator()">
-                                <option value="">Choose a service...</option>
+                        <div>
+                            <label style="display:block;margin-bottom:7px;color:var(--text-main);font-weight:600;font-size:13px;"><i class="fas fa-list"></i> Service</label>
+                            <select id="calcService" onchange="updateCalculator()" style="width:100%;padding:13px;border:1.5px solid var(--border-color);border-radius:var(--radius-sm);font-size:14px;background:#f9fafb;">
+                                <option value="">Choose service...</option>
                             </select>
                         </div>
-                        <div class="input-group">
-                            <label><i class="fas fa-hashtag"></i> Quantity</label>
-                            <input type="number" id="calcQuantity" placeholder="Enter quantity" oninput="updateCalculator()">
+                        <div>
+                            <label style="display:block;margin-bottom:7px;color:var(--text-main);font-weight:600;font-size:13px;"><i class="fas fa-hashtag"></i> Quantity</label>
+                            <input type="number" id="calcQuantity" placeholder="e.g. 1000" oninput="updateCalculator()" style="width:100%;padding:13px;border:1.5px solid var(--border-color);border-radius:var(--radius-sm);font-size:14px;background:#f9fafb;">
                         </div>
                     </div>
                     <div class="calculator-result" id="calcResult" style="display:none;">
                         <div class="result-label">Estimated Cost</div>
                         <div class="result-value">₹<span id="calcTotal">0.00</span></div>
                         <div class="result-breakdown">
-                            <div class="breakdown-item"><div class="breakdown-label">Price Per Unit</div><div class="breakdown-value">₹<span id="calcPricePerUnit">0</span></div></div>
-                            <div class="breakdown-item"><div class="breakdown-label">Total Units</div><div class="breakdown-value"><span id="calcUnits">0</span></div></div>
+                            <div><div style="opacity:0.8;font-size:11px;">Price/1K</div><div style="font-weight:700;">₹<span id="calcPricePerUnit">0</span></div></div>
+                            <div><div style="opacity:0.8;font-size:11px;">Units</div><div style="font-weight:700;"><span id="calcUnits">0</span></div></div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Deposit -->
             <div class="content-section" id="depositSection">
-                <h2 class="section-title"><i class="fas fa-money-bill-wave"></i> Instant Add Funds</h2>
+                <h2 class="section-title"><i class="fas fa-money-bill-wave"></i> Add Funds</h2>
                 <div class="deposit-card">
-                    <form class="deposit-form" onsubmit="initiateRazorpayPayment(event)">
+                    <form onsubmit="initiateRazorpayPayment(event)">
                         <div class="razorpay-notice-box">
                             <h4><i class="fab fa-readme"></i> Automated Razorpay Gateway</h4>
-                            <p>Funds will be credited to your dashboard account instantly upon completing the secure gateway checkout process.</p>
+                            <p>Funds will be credited instantly after secure checkout. Minimum ₹10, Maximum Unlimited.</p>
                         </div>
                         <div class="input-group">
-                            <label><i class="fas fa-rupee-sign"></i> Amount to Add (INR)</label>
-                            <input type="number" id="depositAmount" placeholder="Enter amount (e.g. 500)" min="10" required>
+                            <label><i class="fas fa-rupee-sign"></i> Amount (INR) - Min ₹10</label>
+                            <input type="number" id="depositAmount" placeholder="e.g. 500" min="10" required>
                         </div>
                         <button type="submit" class="btn-submit" id="depositSubmitBtn"><i class="fas fa-credit-card"></i> Pay Securely via Razorpay</button>
                     </form>
                 </div>
             </div>
 
+            <!-- Support -->
             <div class="content-section" id="supportSection">
                 <h2 class="section-title"><i class="fas fa-headset"></i> Support Center</h2>
                 <div class="support-card">
-                    <h3 style="margin-bottom:15px;color:#374151;">Contact Official Support</h3>
-                    <p style="color:#6b7280;margin-bottom:20px;">Click on any link below to access our official channels or send an inquiry direct to our team.</p>
-                    
+                    <h3 style="margin-bottom:12px;color:var(--text-main);font-size:16px;">Contact Official Support</h3>
+                    <p style="color:var(--text-muted);margin-bottom:16px;font-size:13px;">Click any link to reach our official channels.</p>
                     <div class="support-links-box">
-                        <a href="https://play.google.com/store/apps/details?id=com.aayanindustries.shop" target="_blank" class="support-hyperlink">
-                            <i class="fab fa-google-play"></i> Download Our Official Android App
-                        </a>
-                        <a href="https://aayanindustries.shop" target="_blank" class="support-hyperlink">
-                            <i class="fas fa-globe"></i> Visit Our Official Website Portal
-                        </a>
-                        <a href="mailto:likharaayan026@gmail.com" class="support-hyperlink">
-                            <i class="fas fa-envelope"></i> Send Email to Helpdesk Support
-                        </a>
+                        <a href="https://play.google.com/store/apps/details?id=com.aayanindustries.shop" target="_blank" class="support-hyperlink"><i class="fab fa-google-play"></i> Download Android App</a>
+                        <a href="https://aayanindustries.shop" target="_blank" class="support-hyperlink"><i class="fas fa-globe"></i> Official Website</a>
+                        <a href="mailto:likharaayan026@gmail.com" class="support-hyperlink"><i class="fas fa-envelope"></i> Email Helpdesk</a>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
+    <!-- Modal -->
     <div class="modal" id="messageModal">
         <div class="modal-content">
             <div class="modal-icon" id="modalIcon"></div>
-            <h3 class="modal-title" id="modalTitle">Success!</h3>
-            <p class="modal-message" id="modalMessage"></p>
+            <h3 style="font-size:18px;margin-bottom:8px;color:var(--text-main);" id="modalTitle">Success!</h3>
+            <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:18px;" id="modalMessage"></p>
             <button class="modal-btn" onclick="closeModal()">OK</button>
             <button class="modal-btn btn-add-funds" id="addFundsBtn" style="display:none;" onclick="goToDeposit()">Add Funds</button>
         </div>
@@ -503,7 +604,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getDatabase, ref, get, query, orderByChild, equalTo, onValue, set, push, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         const firebaseConfig = {
@@ -519,200 +620,223 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const database = getDatabase(app);
-
         window.firebaseAuth = auth;
         window.firebaseDatabase = database;
 
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+
         // ============================================
-        // ALL SERVICES WITH CATEGORIES (Price +10%)
+        // SERVICES DATA (Price per 1K units)
         // ============================================
         const allServices = [
-            // ===== TWITTER SERVICES =====
-            { id: "4800", name: "Twitter Tweet/Video Views + Impressions + Engagements + Details + Profile Visits | No Re-edit", category: "Twitter", price: 0.29, min: 100, max: 100000000, desc: "Twitter Tweet/Video Views + Impressions + Engagements + Details + Profile Visits | No Re-edit | Day 100M" },
-            { id: "4801", name: "Twitter Tweet/Video Views + Impressions + Engagements + Details + Profile Visits | 30 Day Re-edit", category: "Twitter", price: 0.29, min: 100, max: 100000000, desc: "30 Day Re-edit | Day 100M" },
-            { id: "4802", name: "Twitter Tweet/Video Views + Impressions + Engagements + Details + Profile Visits | 365 Day Re-edit", category: "Twitter", price: 0.67, min: 100, max: 100000000, desc: "365 Day Re-edit | Day 100M" },
-            { id: "4803", name: "Twitter Tweet/Video Views + Impressions + Engagements + Details + Profile Visits | Lifetime Re-edit", category: "Twitter", price: 0.68, min: 100, max: 100000000, desc: "Lifetime Re-edit | Day 100M" },
-            { id: "4747", name: "Twitter Tweet Views [Turkey] | Day 100M", category: "Twitter", price: 0.88, min: 100, max: 100000000, desc: "Turkey Target | Day 100M" },
-            { id: "4748", name: "Twitter Tweet Views [USA] | Day 100M", category: "Twitter", price: 0.88, min: 100, max: 100000000, desc: "USA Target | Day 100M" },
-            { id: "4749", name: "Twitter Tweet Views [Europe] | Day 100M", category: "Twitter", price: 0.88, min: 100, max: 100000000, desc: "Europe Target | Day 100M" },
-            { id: "6057", name: "Twitter Analytics Views - Monetisation | Max 100M | Min 5M", category: "Twitter", price: 1.91, min: 5000000, max: 100000000, desc: "Monetisation Views | Max 100M | Min 5M" },
-            { id: "6056", name: "Twitter Analytics Views - Monetisation | Max 100M | Min 1M", category: "Twitter", price: 4.11, min: 1000000, max: 100000000, desc: "Monetisation Views | Max 100M | Min 1M" },
-            { id: "6055", name: "Twitter Analytics Views - Monetisation | Max 100M", category: "Twitter", price: 6.90, min: 100, max: 100000000, desc: "Monetisation Views | Max 100M" },
-            { id: "4774", name: "Twitter (X) Monetisation Impressions [Speed : 50K/D] [Best For Monetisation]", category: "Twitter", price: 10.90, min: 100, max: 500000000, desc: "Monetisation Impressions | Speed 50K/D" },
-            { id: "3986", name: "Twitter (X) Monetisation Impressions [Speed : 5M/D] [Best For Monetisation]", category: "Twitter", price: 2.24, min: 250, max: 100000000, desc: "Monetisation Impressions | Speed 5M/D" },
-            { id: "3520", name: "Twitter Impression [Refill: No] [Max: 100M] [Speed: 10M/D]", category: "Twitter", price: 0.56, min: 50, max: 100000000, desc: "Impression | No Refill" },
-            { id: "3521", name: "Twitter Impression [NEW FOLLOWERS] [Refill: No] [Max: 100M]", category: "Twitter", price: 5.61, min: 100, max: 100000000, desc: "Impression | New Followers" },
-            { id: "3523", name: "Twitter Impression + Profile Visits + Engagement [Refill: No]", category: "Twitter", price: 7.01, min: 100, max: 2147483647, desc: "Impression + Profile Visits + Engagement" },
-            { id: "3024", name: "Twitter Impression [Refill: 45 Days] [Max: 100M] [Speed: 10M/D]", category: "Twitter", price: 3.64, min: 100, max: 100000000, desc: "Impression | Refill 45 Days" },
-            { id: "3025", name: "Twitter Impression [Refill: 30 Days] [Max: 100M] [Speed: 50M/D]", category: "Twitter", price: 25.12, min: 100, max: 50000000, desc: "Impression | Refill 30 Days" },
-            { id: "3026", name: "Twitter Bookmarks [Refill: No] [Max: 1K] [Speed: 500K/Day]", category: "Twitter", price: 290.53, min: 10, max: 600, desc: "Bookmarks | No Refill" },
-            { id: "1462", name: "Twitter Retweets [Max 1K] [Speed: 1K/Day]", category: "Twitter", price: 139.39, min: 100, max: 1000, desc: "Retweets | Max 1K" },
-            { id: "1461", name: "Twitter Retweets [Refill: No] [Max 5K] [Speed: 5K/Day]", category: "Twitter", price: 190.53, min: 100, max: 1000, desc: "Retweets | Max 5K" },
-            { id: "3031", name: "Twitter Retweets [Refill: No] [Max 50K] [Speed: 10K/Day]", category: "Twitter", price: 234.49, min: 100, max: 100000, desc: "Retweets | Max 50K" },
-            { id: "3030", name: "Twitter Retweets [Max: 350K] [Refill: No] [Speed: 50K/Day]", category: "Twitter", price: 244.27, min: 100, max: 100000, desc: "Retweets | Max 350K" },
-            { id: "4768", name: "Twitter Retweet | 30 Days | [Max: 1K] [Speed: 200-500K/Day]", category: "Twitter", price: 525.28, min: 100, max: 2000, desc: "Retweet | 30 Days" },
-            { id: "1459", name: "Twitter Retweets [Refill: 30 Days] [Max: 10K] [Speed: 200-500K/Day]", category: "Twitter", price: 809.33, min: 10, max: 1000000, desc: "Retweets | Refill 30 Days" },
-            { id: "3515", name: "Twitter Retweets [JAPAN] [Refill: No] [Speed: 600/Day]", category: "Twitter", price: 1008.55, min: 10, max: 50, desc: "Retweets | Japan" },
-            { id: "3517", name: "Twitter Retweets [NIGERIA & GHANA] [Refill: No] [Max: 3K] [Speed: 1K/Day]", category: "Twitter", price: 4377.33, min: 50, max: 5000, desc: "Retweets | Nigeria & Ghana" },
-            { id: "3518", name: "Twitter Poll Votes | Max 100M | Fast", category: "Twitter", price: 1452.63, min: 100, max: 1000, desc: "Poll Votes | Fast" },
-            { id: "1413", name: "Twitter Poll Votes [Refill: 30 Days] [Max: 500K] [Speed: 500K/Day]", category: "Twitter", price: 320.36, min: 10, max: 500000, desc: "Poll Votes | Refill 30 Days" },
-            { id: "3554", name: "Twitter Comments [CUSTOM] [CHINA] [Refill: No] [Max: 1K] [Speed: 1K/Day]", category: "Twitter", price: 4377.33, min: 3, max: 1000, desc: "Comments | China" },
-            { id: "3570", name: "Twitter Comments [USA - Random] [Max: 150] [Refill: 100 Days] [Speed: 150/Day]", category: "Twitter", price: 4324.80, min: 5, max: 4999, desc: "Comments | USA Random" },
-            { id: "363", name: "Twitter Comments [100] [USA HQ Accounts] [SUPER QUALITY]", category: "Twitter", price: 5171.67, min: 10, max: 250, desc: "Comments | USA HQ" },
-            { id: "3555", name: "Twitter Comments [USA] [SUPER QUALITY] [Refill: No] [Max: 250] [Speed: 250/Day]", category: "Twitter", price: 5252.80, min: 10, max: 250, desc: "Comments | USA Super Quality" },
-            { id: "3557", name: "Twitter Comments [RANDOM] [ARAB] [Refill: No] [Max: 100] [Speed: 100/Day]", category: "Twitter", price: 5252.80, min: 10, max: 250, desc: "Comments | Arab" },
-
-            // ===== INSTAGRAM SERVICES =====
-            { id: "4182", name: "Instagram Followers [Speed - 100K/Day] [Refill - 365Days] [Instant] [Best]", category: "Instagram", price: 80.55, min: 5, max: 50000000, desc: "Followers | 100K/Day | 365 Days Refill" },
-            { id: "4258", name: "Instagram Followers [Refill - 30Days] [Speed - 10K/Day] [Instant]", category: "Instagram", price: 45.25, min: 50, max: 1000000, desc: "Followers | 10K/Day | 30 Days Refill" },
-            { id: "4180", name: "Instagram Followers [Speed - 200K/Day] [Refill - 30Days] [Instant]", category: "Instagram", price: 60.32, min: 20, max: 1000000, desc: "Followers | 200K/Day | 30 Days Refill" },
-            { id: "4761", name: "Instagram Followers [Refill - 365Days] [Instant] [Refill - 30K/Day]", category: "Instagram", price: 67.68, min: 50, max: 1000000, desc: "Followers | 365 Days Refill" },
-            { id: "3344", name: "Instagram Followers [R30] [Speed - 50K/Day] [Refill - 365Days]", category: "Instagram", price: 72.90, min: 20, max: 1000000, desc: "Followers | R30 | 365 Days" },
-            { id: "4680", name: "Instagram Followers [Refill - 30Days] [Speed - 50K/Day] [Instant]", category: "Instagram", price: 73.51, min: 100, max: 1000000, desc: "Followers | 50K/Day | 30 Days" },
-            { id: "3343", name: "Instagram Followers [R365] [Speed - 100K/Day] [Refill - 365Days]", category: "Instagram", price: 101.21, min: 20, max: 1000000, desc: "Followers | R365 | 100K/Day" },
-            { id: "2983", name: "Instagram Followers [Refill - 365Days] [Speed - 50K/Day] [Instant]", category: "Instagram", price: 100.53, min: 10, max: 1000000, desc: "Followers | 365 Days | 50K/Day" },
-            { id: "2981", name: "Instagram Followers [Refill - 365Days] [Speed - 200K/Day] [Instant]", category: "Instagram", price: 101.50, min: 20, max: 1000000, desc: "Followers | 365 Days | 200K/Day" },
-            { id: "3346", name: "Instagram Followers [R30] [Speed - 100K/Day] [Refill - 365Days]", category: "Instagram", price: 102.06, min: 20, max: 1000000, desc: "Followers | R30 | 100K/Day" },
-            { id: "6054", name: "Instagram Followers [Refill - 45Days] [Speed - 50K/Day] [Instant]", category: "Instagram", price: 112.27, min: 20, max: 1000000, desc: "Followers | 45 Days | 50K/Day" },
-            { id: "4179", name: "Instagram Followers [Speed - 200K/Day] [Refill - 30Days] [Instant]", category: "Instagram", price: 121.98, min: 100, max: 200000, desc: "Followers | 200K/Day | 30 Days" },
-            { id: "4675", name: "Instagram Followers [Speed - 500K/Day] [Refill - 365Days] [Instant]", category: "Instagram", price: 154.99, min: 10, max: 50000000, desc: "Followers | 500K/Day | 365 Days" },
-            { id: "4256", name: "Instagram Followers [Refill - 30Days] [Speed - 10K/Day] [Instant]", category: "Instagram", price: 179.64, min: 10, max: 1000000, desc: "Followers | 10K/Day | 30 Days" },
-            { id: "4105", name: "Instagram Indian Real Mix [Speed - 50K/Day] [Instant]", category: "Instagram", price: 262.43, min: 50, max: 500000, desc: "Indian Real Mix" },
-            { id: "4181", name: "Instagram Followers [Refill - 365Days] [Speed - 50K/Day] [Instant]", category: "Instagram", price: 385.06, min: 10, max: 1000000, desc: "Followers | 365 Days" },
-            { id: "2982", name: "Instagram Followers [Indian Mix] [Speed - 50K/Day] [Instant]", category: "Instagram", price: 407.70, min: 10, max: 1000000, desc: "Indian Mix Followers" },
-            { id: "4183", name: "Instagram Indian Real Mix [Speed - 50K/Day] [Instant]", category: "Instagram", price: 407.70, min: 10, max: 500000, desc: "Indian Real Mix" },
-            { id: "3345", name: "Instagram Followers [R365] [Speed - 250K/Day] [SUPER FAST]", category: "Instagram", price: 419.88, min: 10, max: 1000000, desc: "Followers | R365 | Super Fast" },
-            { id: "4682", name: "Instagram Followers [R365] [Speed - 100K/Day] [SUPER FAST]", category: "Instagram", price: 437.38, min: 10, max: 5000000, desc: "Followers | R365 | Super Fast" },
-            { id: "6219", name: "Instagram Followers [Real Mixed] [Speed - 100K/Day] [Auto Refill + Button 7D]", category: "Instagram", price: 117.22, min: 50, max: 1000000, desc: "Auto Refill 7 Days" },
-            { id: "6220", name: "Instagram Followers [Real Mixed] [Speed - 100K/Day] [Auto Refill + Button 30D]", category: "Instagram", price: 125.19, min: 50, max: 1000000, desc: "Auto Refill 30 Days" },
-            { id: "6221", name: "Instagram Followers [Real Mixed] [Speed - 100K/Day] [Auto Refill + Button 365D]", category: "Instagram", price: 135.86, min: 50, max: 1000000, desc: "Auto Refill 365 Days" },
-            { id: "6222", name: "Instagram Followers [Real Mixed] [Speed - 100K/Day] [Auto Refill + Button Life Time]", category: "Instagram", price: 141.19, min: 50, max: 1000000, desc: "Auto Refill Lifetime" },
-            { id: "1476", name: "Instagram Likes [PURE INDIAN] [Accounts With Stories] [FAST]", category: "Instagram", price: 26.33, min: 50, max: 20000, desc: "Pure Indian Likes" },
-            { id: "ig_like2", name: "Instagram Likes [INDIA MIX] [Start Time: Instant] [Speed: 50K/Day]", category: "Instagram", price: 63.27, min: 10, max: 50000, desc: "India Mix Likes" },
-            { id: "ig_like3", name: "Instagram Likes [INDIA MIX] [Refill: 365Days] [Max: 100K] [Speed: 50K/Day]", category: "Instagram", price: 93.31, min: 50, max: 100000, desc: "India Mix | 365 Days Refill" },
-            { id: "ig_like4", name: "Instagram Likes [INDIA] [Speed: 5K/Day]", category: "Instagram", price: 184.90, min: 20, max: 3000, desc: "India Likes | 5K/Day" },
-            { id: "ig_like5", name: "Instagram Likes [INDIA] [Refill: No] [Max: 50K] [Speed: 5K/Day]", category: "Instagram", price: 284.54, min: 20, max: 50000, desc: "India Likes | No Refill" },
-            { id: "ig_like6", name: "Instagram Likes [INDIA] [Refill: 30D] [Max: 100K] [Speed: 15K/Day]", category: "Instagram", price: 313.78, min: 10, max: 100000, desc: "India Likes | 30D Refill" },
-            { id: "ig_nd1", name: "Instagram Likes [Non Drop] [Speed: 40000/Hour] [MQ] [SuperFast]", category: "Instagram", price: 4.63, min: 1, max: 40000, desc: "Non Drop | Speed 40000/Hour" },
-            { id: "ig_nd2", name: "Instagram Likes [Non Drop] [Max - 10K] [Speed: 10K/Hour] [Medium Quality]", category: "Instagram", price: 5.82, min: 50, max: 10000, desc: "Non Drop | Max 10K" },
-            { id: "ig_nd3", name: "Instagram Likes [Non Drop] [Max - 200K] [Speed: 30K/H] [MQ]", category: "Instagram", price: 6.97, min: 10, max: 5000000, desc: "Non Drop | Max 200K" },
-            { id: "ig_nd4", name: "Instagram Likes [Non Drop] [Speed 10K/H] [Start Instant]", category: "Instagram", price: 4.44, min: 10, max: 25000000, desc: "Non Drop | Speed 10K/H" },
-            { id: "ig_nd5", name: "Instagram Likes [Non Drop] [Max - 20K] [Speed: 10K-20K/Day] [Cheapest]", category: "Instagram", price: 8.00, min: 100, max: 20000, desc: "Non Drop | Max 20K" },
-            { id: "ig_nd6", name: "Instagram Likes [Non Drop] [Speed: 100K/Day] [Start: 0-10Min]", category: "Instagram", price: 17.63, min: 50, max: 2000000, desc: "Non Drop | Speed 100K/Day" },
-            { id: "ig_usa1", name: "Instagram USA Followers [30-Day Refill] [Max 100K] [Instant Start]", category: "Instagram", price: 406.74, min: 10, max: 100000, desc: "USA Followers | 30-Day Refill" },
-            { id: "ig_usa2", name: "Instagram USA Private Followers [No Duplicate Links]", category: "Instagram", price: 435.80, min: 20, max: 100000, desc: "USA Private Followers" },
-            { id: "ig_usa3", name: "Instagram USA Real and Active Likes [Max 100K] [Instant] [Non-Drop]", category: "Instagram", price: 72.63, min: 10, max: 100000, desc: "USA Likes | Non-Drop" },
-            { id: "ig_br1", name: "Instagram Likes [Brazil] [Max 1K]", category: "Instagram", price: 83.37, min: 50, max: 1000, desc: "Brazil Likes | Max 1K" },
-            { id: "ig_br2", name: "Instagram Likes [Brazil] [Max 5K]", category: "Instagram", price: 102.06, min: 50, max: 5000, desc: "Brazil Likes | Max 5K" },
-            { id: "ig_br3", name: "Instagram Likes [Brazil] [Max 100K]", category: "Instagram", price: 138.51, min: 50, max: 100000, desc: "Brazil Likes | Max 100K" },
-            { id: "ig_eur1", name: "Instagram European Likes [2K per Hour] [Lifetime Guaranteed] [Real]", category: "Instagram", price: 98.78, min: 10, max: 80000, desc: "European Likes | Lifetime Guaranteed" },
-            { id: "ig_eur2", name: "Instagram European Followers [Super Refill] [Refill 30 Days] [10K/Day]", category: "Instagram", price: 508.42, min: 10, max: 500000, desc: "European Followers | 30 Days Refill" },
-            { id: "ig_story1", name: "Instagram Story Views [Max: 4K] [Speed: 4K/Day]", category: "Instagram", price: 1.57, min: 10, max: 1000000, desc: "Story Views | Max 4K" },
-            { id: "ig_story2", name: "Instagram Story Views [Max: 30K] [Speed: 30K/Day]", category: "Instagram", price: 18.16, min: 10, max: 10000, desc: "Story Views | Max 30K" },
-            { id: "ig_story3", name: "Instagram Story Views [Max: 10K] [Speed: INSTANT]", category: "Instagram", price: 14.53, min: 100, max: 10000, desc: "Story Views | Instant" },
-            { id: "ig_story4", name: "Instagram Story Views [LAST STORY ONLY] [Max: 30K] [Speed: 10K/Day]", category: "Instagram", price: 14.53, min: 20, max: 30000, desc: "Story Views | Last Story Only" },
-            { id: "ig_story5", name: "Instagram Story Mentions [Max: 1M] [Speed: 1M/Day]", category: "Instagram", price: 17.44, min: 200, max: 1000000, desc: "Story Mentions" },
-            { id: "ig_live1", name: "Instagram Live Viewers [Stay Time-15 Min] [Fast]", category: "Instagram", price: 581.05, min: 50, max: 50000, desc: "Live Viewers | 15 Min Stay" },
-            { id: "ig_live2", name: "Instagram Live Viewers [Stay Time-30 Min] [Fast]", category: "Instagram", price: 1162.11, min: 50, max: 50000, desc: "Live Viewers | 30 Min Stay" },
-            { id: "ig_live3", name: "Instagram Live Viewers [Stay Time-60 Min] [Fast]", category: "Instagram", price: 1888.41, min: 50, max: 50000, desc: "Live Viewers | 60 Min Stay" },
-            { id: "ig_auto1", name: "Instagram Auto Views - Speed: INSTANT", category: "Instagram", price: 9.45, min: 100, max: 100000000, desc: "Auto Views | Instant" },
-            { id: "ig_auto2", name: "Instagram Auto Views - Speed: INSTANT [Cheapest]", category: "Instagram", price: 0.20, min: 10, max: 2147482847, desc: "Auto Views | Instant" },
-            { id: "ig_auto3", name: "Instagram Auto Views + Impressions (Max: 5M) [Speed: 500K/Day]", category: "Instagram", price: 161.87, min: 100, max: 100000000, desc: "Auto Views + Impressions" },
-            { id: "ig_ment1", name: "Instagram Mentions | User Followers", category: "Instagram", price: 392.74, min: 5000, max: 1000001, desc: "Mentions | User Followers" },
-            { id: "ig_ment2", name: "Instagram Mentions [Min: 50K] [Max: 100K] [Speed: 100K/Day]", category: "Instagram", price: 368.20, min: 5000, max: 1000001, desc: "Mentions | 50K-100K" },
-            { id: "ig_prof1", name: "Instagram Profile Visits + Reach + Impressions - Speed: 50K/Day", category: "Instagram", price: 10.12, min: 10, max: 1000000, desc: "Profile Visits + Reach" },
-            { id: "ig_prof2", name: "Instagram Profile Visits [Max: 500K]", category: "Instagram", price: 3.45, min: 10, max: 1000000, desc: "Profile Visits | Max 500K" },
-            { id: "ig_eng1", name: "Instagram Engagement + Shares - Speed: 100k/Hr", category: "Instagram", price: 57.33, min: 100, max: 100000, desc: "Engagement + Shares" },
-            { id: "ig_comm1", name: "Instagram Custom Comments [Max -10K] [Speed: 10K/D] [High Quality]", category: "Instagram", price: 47.60, min: 10, max: 10000, desc: "Custom Comments" },
-            { id: "ig_comm_rand1", name: "Instagram Random Comments - Start: 0-1H | 3-5K Day", category: "Instagram", price: 43.58, min: 10, max: 10000, desc: "Random Comments" },
-            { id: "thread1", name: "Threads Organic Followers [Max 50K] HQ Accounts Low Drop", category: "Instagram", price: 1961.05, min: 100, max: 50000, desc: "Organic Followers | No Refill" },
-            { id: "thread3", name: "Threads Organic Likes [Max 50K] HQ Accounts Low Drop", category: "Instagram", price: 1089.47, min: 50, max: 50000, desc: "Organic Likes | No Refill" },
-
-            // ===== FACEBOOK SERVICES =====
-            { id: "fb_follow1", name: "Facebook Profile Followers [Refill: 90 Days] [Speed: 5K/Day]", category: "Facebook", price: 110.80, min: 10, max: 1000000, desc: "Profile Followers | 90 Days Refill" },
-            { id: "fb_follow2", name: "Facebook Profile/Page Followers | Non Drop | 20K-50K/Day | 30 Days Refill", category: "Facebook", price: 108.96, min: 100, max: 5000000, desc: "Profile/Page Followers | Non Drop" },
-            { id: "fb_follow3", name: "Facebook Profile Followers [Refill: 30 Days] [Max: 50K] [Speed: 10K/Day]", category: "Facebook", price: 110.88, min: 100, max: 1000000000, desc: "Profile Followers | 30 Days Refill" },
-            { id: "fb_group1", name: "Facebook Group Members [MQ] [Refill: 30 Days] [Max: 100K] [Speed: 5K/Day]", category: "Facebook", price: 30.51, min: 10, max: 100000, desc: "Group Members | MQ" },
-            { id: "fb_group2", name: "Facebook Group Members [Refill: 70 Days] [Max: 40K] [Speed: 5K/Day]", category: "Facebook", price: 40.47, min: 100, max: 100000, desc: "Group Members | 70 Days Refill" },
-            { id: "fb_group3", name: "Facebook Group Member | HIGH QUALITY | NON DROP | Speed: 15K+/Day", category: "Facebook", price: 130.75, min: 10, max: 100000, desc: "Group Member | High Quality" },
-            { id: "fb_post1", name: "Facebook Post Likes [Refill: 30 Days] [Speed: 5K/Day]", category: "Facebook", price: 320.50, min: 10, max: 50000, desc: "Post Likes | 30 Days Refill" },
-            { id: "fb_post2", name: "Facebook Post Likes [Max: 100K] [Speed: 10K-50K/Day]", category: "Facebook", price: 49.47, min: 10, max: 1000000, desc: "Post Likes | Instant" },
-            { id: "fb_post3", name: "Facebook Post Likes [Max - 100K] [Speed 1500/hour] [Refill: 30 Days] [HQ]", category: "Facebook", price: 63.62, min: 10, max: 5000000, desc: "Post Likes | HQ Refill" },
-            { id: "fb_reaction1", name: "Facebook Post Reaction [Refill: 30 Days] [Speed: 50K/Day]", category: "Facebook", price: 46.51, min: 10, max: 5000000, desc: "Post Reaction | 30 Days Refill" },
-            { id: "fb_reaction2", name: "Facebook Post Reaction [Refill: 30 Days] [Speed: 50K/Day]", category: "Facebook", price: 11.04, min: 10, max: 5000000, desc: "Post Reaction | 30 Days Refill" },
-            { id: "fb_story1", name: "Facebook Story Views [Max: 100K] [Speed: 10K/Hr]", category: "Facebook", price: 195.89, min: 100, max: 20000, desc: "Story Views | 10K/Hr" },
-            { id: "fb_story2", name: "Facebook Story Views [Max: 100K] [Speed: 50K/Hr]", category: "Facebook", price: 195.46, min: 100, max: 20000, desc: "Story Views | 50K/Hr" },
-            { id: "fb_live1", name: "Facebook Live Stream Views [Stay for 15 minutes] Fast Entry", category: "Facebook", price: 43.73, min: 10, max: 5000, desc: "Live Views | 15 Min Stay" },
-            { id: "fb_live2", name: "Facebook Live Stream Views [Stay for 30 minutes] Fast Entry", category: "Facebook", price: 102.78, min: 20, max: 20000, desc: "Live Views | 30 Min Stay" },
-            { id: "fb_live3", name: "Facebook Live Stream Views [Stay for 60 minutes] Fast Entry", category: "Facebook", price: 205.57, min: 20, max: 20000, desc: "Live Views | 60 Min Stay" },
-            { id: "fb_live4", name: "Facebook Live Stream Views [Stay for 90 minutes] Fast Entry", category: "Facebook", price: 308.35, min: 20, max: 20000, desc: "Live Views | 90 Min Stay" },
-
-            // ===== TELEGRAM SERVICES =====
-            { id: "tg_mem1", name: "Telegram Non Drop Member [50K+/Day] [30 Days Non Drop]", category: "Telegram", price: 26.90, min: 500, max: 100000, desc: "Non Drop Members | 50K/Day" },
-            { id: "tg_mem2", name: "Telegram Member [40K+/Day] [30Days Guaranteed]", category: "Telegram", price: 28.34, min: 100, max: 100000, desc: "Members | 40K/Day" },
-            { id: "tg_mem3", name: "Telegram Members - Instant - Speed : 50K/D - 30 Days Refill", category: "Telegram", price: 29.59, min: 500, max: 5000, desc: "Members | 50K/D | 30 Days Refill" },
-            { id: "tg_mem4", name: "Telegram Non Drop Members [15K+/Day] [Instant] [Refill - 30Days]", category: "Telegram", price: 30.05, min: 100, max: 100000, desc: "Non Drop | 15K/Day" },
-            { id: "tg_mem5", name: "Telegram Non Drop Members [10K+/Day] [Instant] [100 Days]", category: "Telegram", price: 42.13, min: 500, max: 30000, desc: "Non Drop | 10K/Day" },
-            { id: "tg_mem6", name: "Telegram Channel/Group Members [90Day Non drop] [Speed 50K]", category: "Telegram", price: 42.13, min: 500, max: 50000, desc: "Non Drop | 90 Day" },
-            { id: "tg_mem7", name: "Telegram Non Drop Members [30K+/Day] [Instant] [30 Days]", category: "Telegram", price: 43.92, min: 100, max: 300000, desc: "Non Drop | 30K/Day" },
-            { id: "tg_view1", name: "Telegram Single Post View [Natural Speed]", category: "Telegram", price: 1.28, min: 50, max: 100000, desc: "Post View | Natural Speed" },
-            { id: "tg_view2", name: "Telegram Single Post View [Cheapest]", category: "Telegram", price: 0.10, min: 10, max: 10000, desc: "Post View | Cheapest" },
-            { id: "tg_view3", name: "Telegram Post View [Average Speed]", category: "Telegram", price: 0.58, min: 10, max: 100000, desc: "Post View | Average Speed" },
-            { id: "tg_view4", name: "Telegram Single Post View [Fast]", category: "Telegram", price: 6.91, min: 10, max: 500000, desc: "Post View | Fast" },
-            { id: "tg_future1", name: "Telegram Auto Views [5 Future Post]", category: "Telegram", price: 12.75, min: 100, max: 2000000, desc: "Auto Views | 5 Posts" },
-            { id: "tg_future2", name: "Telegram Auto Views [10 Future Post]", category: "Telegram", price: 26.43, min: 100, max: 2000000, desc: "Auto Views | 10 Posts" },
-            { id: "tg_future3", name: "Telegram Auto Views [20 Future Post]", category: "Telegram", price: 52.86, min: 100, max: 2000000, desc: "Auto Views | 20 Posts" },
-            { id: "tg_future4", name: "Telegram Auto Views [50 Future Post]", category: "Telegram", price: 121.56, min: 100, max: 2000000, desc: "Auto Views | 50 Posts" },
-            { id: "tg_future5", name: "Telegram Auto Views [100 Future Post]", category: "Telegram", price: 226.51, min: 100, max: 2000000, desc: "Auto Views | 100 Posts" },
-            { id: "tg_future6", name: "Telegram Auto Views [500 Future Post]", category: "Telegram", price: 990.98, min: 100, max: 2000000, desc: "Auto Views | 500 Posts" },
-            { id: "tg_future7", name: "Telegram Auto Views [1000 Future Post]", category: "Telegram", price: 1840.38, min: 100, max: 2000000, desc: "Auto Views | 1000 Posts" },
-            { id: "tg_prem1", name: "Telegram Premium Members [3 Days No Drop] [Russian]", category: "Telegram", price: 205.90, min: 100, max: 100000, desc: "Premium Members | 3 Days" },
-            { id: "tg_prem2", name: "Telegram Premium Members [7 Days No Drop] [Russian]", category: "Telegram", price: 316.45, min: 100, max: 100000, desc: "Premium Members | 7 Days" },
-            { id: "tg_prem3", name: "Telegram Premium Members [10 Days No Drop] [Russian]", category: "Telegram", price: 413.17, min: 100, max: 100000, desc: "Premium Members | 10 Days" },
-            { id: "tg_prem4", name: "Telegram Premium Members [15 Days No Drop] [Russian]", category: "Telegram", price: 482.26, min: 100, max: 100000, desc: "Premium Members | 15 Days" },
-            { id: "tg_ctry1", name: "Telegram Chinese Post Views [Include Static]", category: "Telegram", price: 6.97, min: 10, max: 250000, desc: "Chinese Post Views" },
-            { id: "tg_ctry2", name: "Telegram Indian Post Views [Include Static]", category: "Telegram", price: 6.97, min: 50, max: 200000, desc: "Indian Post Views" },
-            { id: "tg_ads1", name: "Telegram Ads Solution - Competitor Ad Removal for Channels & Bots", category: "Telegram", price: 53.00, min: 100, max: 80000, desc: "Competitor Ad Removal" },
-            { id: "tg_ads2", name: "Telegram Ads Solution - Competitor Ad Removal for Channels", category: "Telegram", price: 58.58, min: 10, max: 50000, desc: "Channel Ad Removal" },
-            { id: "tg_online1", name: "Telegram Group Online Member [New Base] [30 Days]", category: "Telegram", price: 165.83, min: 10, max: 100000, desc: "Online Member | 30 Days" },
-            { id: "tg_online2", name: "Telegram Group Online Member [New Base] [60 Days]", category: "Telegram", price: 248.40, min: 10, max: 100000, desc: "Online Member | 60 Days" },
-            { id: "tg_search1", name: "Telegram Non Drop Member [30 Day] [Join From Search By Keyword]", category: "Telegram", price: 100.86, min: 100, max: 100000, desc: "Non Drop | 30 Days" },
-            { id: "tg_search2", name: "Telegram Non Drop Members [90 Day] [Join From Search By Link]", category: "Telegram", price: 94.14, min: 100, max: 100000, desc: "Non Drop | 90 Days" },
-            { id: "tg_prem_react1", name: "Telegram Premium reactions - [📤 + Views]", category: "Telegram", price: 15.54, min: 10, max: 1000000, desc: "Premium Reactions" },
-            { id: "tg_stars1", name: "Telegram Premium Stars [For Post] [Instant]", category: "Telegram", price: 2348.96, min: 1, max: 1000000, desc: "Premium Stars | Post" },
-            { id: "tg_stars2", name: "Telegram Premium Stars [For Profile] [Instant]", category: "Telegram", price: 2262.21, min: 50, max: 100000, desc: "Premium Stars | Profile" },
-            { id: "tg_bot1", name: "Telegram Bot Start For Search Ranking [Russian]", category: "Telegram", price: 146.82, min: 50, max: 100000, desc: "Bot Start | Russian" },
-            { id: "tg_boost1", name: "Telegram Boost Channel [Channel Story Activate] [1 Day]", category: "Telegram", price: 2435.70, min: 1, max: 10000, desc: "Boost | 1 Day" },
-            { id: "tg_boost2", name: "Telegram Boost Channel [Channel Story Activation] [5 Days]", category: "Telegram", price: 6082.90, min: 10, max: 100000, desc: "Boost | 5 Days" },
-            { id: "tg_ai1", name: "Telegram AI Members + 7 Days Auto Future Post View", category: "Telegram", price: 488.09, min: 500, max: 20000, desc: "AI Members | 7 Days" },
-            { id: "tg_ai2", name: "Telegram AI Members + 14 Days Auto Future Post View", category: "Telegram", price: 1269.02, min: 500, max: 20000, desc: "AI Members | 14 Days" },
-            { id: "tg_ai3", name: "Telegram AI Members + 30 Days Auto Future Post View", category: "Telegram", price: 2342.80, min: 500, max: 20000, desc: "AI Members | 30 Days" },
+            { id: "4800", name: "Twitter Tweet/Video Views + Impressions + Engagements", category: "Twitter", price: 0.29, min: 100, max: 100000000, desc: "No Re-edit | Day 100M" },
+            { id: "4801", name: "Twitter Views + Impressions | 30 Day Re-edit", category: "Twitter", price: 0.29, min: 100, max: 100000000, desc: "30 Day Re-edit" },
+            { id: "4802", name: "Twitter Views + Impressions | 365 Day Re-edit", category: "Twitter", price: 0.67, min: 100, max: 100000000, desc: "365 Day Re-edit" },
+            { id: "4803", name: "Twitter Views + Impressions | Lifetime Re-edit", category: "Twitter", price: 0.68, min: 100, max: 100000000, desc: "Lifetime Re-edit" },
+            { id: "4747", name: "Twitter Tweet Views [Turkey]", category: "Twitter", price: 0.88, min: 100, max: 100000000, desc: "Turkey Target" },
+            { id: "4748", name: "Twitter Tweet Views [USA]", category: "Twitter", price: 0.88, min: 100, max: 100000000, desc: "USA Target" },
+            { id: "4749", name: "Twitter Tweet Views [Europe]", category: "Twitter", price: 0.88, min: 100, max: 100000000, desc: "Europe Target" },
+            { id: "6057", name: "Twitter Analytics Views - Monetisation | Max 100M | Min 5M", category: "Twitter", price: 1.91, min: 5000000, max: 100000000, desc: "Monetisation Views" },
+            { id: "6056", name: "Twitter Analytics Views - Monetisation | Min 1M", category: "Twitter", price: 4.11, min: 1000000, max: 100000000, desc: "Monetisation Views" },
+            { id: "6055", name: "Twitter Analytics Views - Monetisation | Max 100M", category: "Twitter", price: 6.90, min: 100, max: 100000000, desc: "Monetisation Views" },
+            { id: "4774", name: "Twitter Monetisation Impressions [Speed 50K/D]", category: "Twitter", price: 10.90, min: 100, max: 500000000, desc: "Best For Monetisation" },
+            { id: "3986", name: "Twitter Monetisation Impressions [Speed 5M/D]", category: "Twitter", price: 2.24, min: 250, max: 100000000, desc: "Best For Monetisation" },
+            { id: "3520", name: "Twitter Impression [No Refill]", category: "Twitter", price: 0.56, min: 50, max: 100000000, desc: "Speed 10M/D" },
+            { id: "3521", name: "Twitter Impression [NEW FOLLOWERS]", category: "Twitter", price: 5.61, min: 100, max: 100000000, desc: "No Refill" },
+            { id: "3523", name: "Twitter Impression + Profile Visits + Engagement", category: "Twitter", price: 7.01, min: 100, max: 2147483647, desc: "No Refill" },
+            { id: "3024", name: "Twitter Impression [45 Days Refill]", category: "Twitter", price: 3.64, min: 100, max: 100000000, desc: "Speed 10M/D" },
+            { id: "3025", name: "Twitter Impression [30 Days Refill]", category: "Twitter", price: 25.12, min: 100, max: 50000000, desc: "Speed 50M/D" },
+            { id: "3026", name: "Twitter Bookmarks [No Refill]", category: "Twitter", price: 290.53, min: 10, max: 600, desc: "Speed 500K/Day" },
+            { id: "1462", name: "Twitter Retweets [Max 1K]", category: "Twitter", price: 139.39, min: 100, max: 1000, desc: "Speed 1K/Day" },
+            { id: "1461", name: "Twitter Retweets [Max 5K]", category: "Twitter", price: 190.53, min: 100, max: 1000, desc: "No Refill" },
+            { id: "3031", name: "Twitter Retweets [Max 50K]", category: "Twitter", price: 234.49, min: 100, max: 100000, desc: "Speed 10K/Day" },
+            { id: "3030", name: "Twitter Retweets [Max 350K]", category: "Twitter", price: 244.27, min: 100, max: 100000, desc: "Speed 50K/Day" },
+            { id: "4768", name: "Twitter Retweet | 30 Days", category: "Twitter", price: 525.28, min: 100, max: 2000, desc: "Speed 200-500K/Day" },
+            { id: "1459", name: "Twitter Retweets [30 Days Refill]", category: "Twitter", price: 809.33, min: 10, max: 1000000, desc: "Speed 200-500K/Day" },
+            { id: "3515", name: "Twitter Retweets [JAPAN]", category: "Twitter", price: 1008.55, min: 10, max: 50, desc: "Speed 600/Day" },
+            { id: "3517", name: "Twitter Retweets [NIGERIA & GHANA]", category: "Twitter", price: 4377.33, min: 50, max: 5000, desc: "Speed 1K/Day" },
+            { id: "3518", name: "Twitter Poll Votes | Max 100M", category: "Twitter", price: 1452.63, min: 100, max: 1000, desc: "Fast" },
+            { id: "1413", name: "Twitter Poll Votes [30 Days Refill]", category: "Twitter", price: 320.36, min: 10, max: 500000, desc: "Speed 500K/Day" },
+            { id: "3554", name: "Twitter Comments [CHINA]", category: "Twitter", price: 4377.33, min: 3, max: 1000, desc: "Speed 1K/Day" },
+            { id: "3570", name: "Twitter Comments [USA Random]", category: "Twitter", price: 4324.80, min: 5, max: 4999, desc: "100 Days Refill" },
+            { id: "363", name: "Twitter Comments [USA HQ]", category: "Twitter", price: 5171.67, min: 10, max: 250, desc: "Super Quality" },
+            { id: "3555", name: "Twitter Comments [USA Super Quality]", category: "Twitter", price: 5252.80, min: 10, max: 250, desc: "Speed 250/Day" },
+            { id: "3557", name: "Twitter Comments [ARAB]", category: "Twitter", price: 5252.80, min: 10, max: 250, desc: "Speed 100/Day" },
+            { id: "4182", name: "Instagram Followers [100K/Day | 365D Refill]", category: "Instagram", price: 80.55, min: 5, max: 50000000, desc: "Instant | Best" },
+            { id: "4258", name: "Instagram Followers [10K/Day | 30D Refill]", category: "Instagram", price: 45.25, min: 50, max: 1000000, desc: "Instant" },
+            { id: "4180", name: "Instagram Followers [200K/Day | 30D Refill]", category: "Instagram", price: 60.32, min: 20, max: 1000000, desc: "Instant" },
+            { id: "4761", name: "Instagram Followers [365D Refill]", category: "Instagram", price: 67.68, min: 50, max: 1000000, desc: "30K/Day" },
+            { id: "3344", name: "Instagram Followers [R30 | 50K/Day]", category: "Instagram", price: 72.90, min: 20, max: 1000000, desc: "365D Refill" },
+            { id: "4680", name: "Instagram Followers [50K/Day | 30D Refill]", category: "Instagram", price: 73.51, min: 100, max: 1000000, desc: "Instant" },
+            { id: "3343", name: "Instagram Followers [R365 | 100K/Day]", category: "Instagram", price: 101.21, min: 20, max: 1000000, desc: "365D Refill" },
+            { id: "2983", name: "Instagram Followers [365D | 50K/Day]", category: "Instagram", price: 100.53, min: 10, max: 1000000, desc: "Instant" },
+            { id: "2981", name: "Instagram Followers [365D | 200K/Day]", category: "Instagram", price: 101.50, min: 20, max: 1000000, desc: "Instant" },
+            { id: "3346", name: "Instagram Followers [R30 | 100K/Day]", category: "Instagram", price: 102.06, min: 20, max: 1000000, desc: "365D Refill" },
+            { id: "6054", name: "Instagram Followers [45D | 50K/Day]", category: "Instagram", price: 112.27, min: 20, max: 1000000, desc: "Instant" },
+            { id: "4179", name: "Instagram Followers [200K/Day | 30D Refill]", category: "Instagram", price: 121.98, min: 100, max: 200000, desc: "Instant" },
+            { id: "4675", name: "Instagram Followers [500K/Day | 365D Refill]", category: "Instagram", price: 154.99, min: 10, max: 50000000, desc: "Instant" },
+            { id: "4256", name: "Instagram Followers [10K/Day | 30D Refill]", category: "Instagram", price: 179.64, min: 10, max: 1000000, desc: "Instant" },
+            { id: "4105", name: "Instagram Indian Real Mix [50K/Day]", category: "Instagram", price: 262.43, min: 50, max: 500000, desc: "Instant" },
+            { id: "4181", name: "Instagram Followers [365D | 50K/Day]", category: "Instagram", price: 385.06, min: 10, max: 1000000, desc: "Instant" },
+            { id: "2982", name: "Instagram Followers [Indian Mix]", category: "Instagram", price: 407.70, min: 10, max: 1000000, desc: "50K/Day" },
+            { id: "4183", name: "Instagram Indian Real Mix [50K/Day]", category: "Instagram", price: 407.70, min: 10, max: 500000, desc: "Instant" },
+            { id: "3345", name: "Instagram Followers [R365 | 250K/Day]", category: "Instagram", price: 419.88, min: 10, max: 1000000, desc: "Super Fast" },
+            { id: "4682", name: "Instagram Followers [R365 | 100K/Day]", category: "Instagram", price: 437.38, min: 10, max: 5000000, desc: "Super Fast" },
+            { id: "6219", name: "Instagram Followers [Real Mixed | 7D Auto Refill]", category: "Instagram", price: 117.22, min: 50, max: 1000000, desc: "100K/Day" },
+            { id: "6220", name: "Instagram Followers [Real Mixed | 30D Auto Refill]", category: "Instagram", price: 125.19, min: 50, max: 1000000, desc: "100K/Day" },
+            { id: "6221", name: "Instagram Followers [Real Mixed | 365D Auto Refill]", category: "Instagram", price: 135.86, min: 50, max: 1000000, desc: "100K/Day" },
+            { id: "6222", name: "Instagram Followers [Real Mixed | Lifetime Auto Refill]", category: "Instagram", price: 141.19, min: 50, max: 1000000, desc: "100K/Day" },
+            { id: "1476", name: "Instagram Likes [PURE INDIAN]", category: "Instagram", price: 26.33, min: 50, max: 20000, desc: "FAST" },
+            { id: "ig_like2", name: "Instagram Likes [INDIA MIX]", category: "Instagram", price: 63.27, min: 10, max: 50000, desc: "50K/Day" },
+            { id: "ig_like3", name: "Instagram Likes [INDIA MIX | 365D Refill]", category: "Instagram", price: 93.31, min: 50, max: 100000, desc: "50K/Day" },
+            { id: "ig_like4", name: "Instagram Likes [INDIA]", category: "Instagram", price: 184.90, min: 20, max: 3000, desc: "5K/Day" },
+            { id: "ig_like5", name: "Instagram Likes [INDIA | No Refill]", category: "Instagram", price: 284.54, min: 20, max: 50000, desc: "5K/Day" },
+            { id: "ig_like6", name: "Instagram Likes [INDIA | 30D Refill]", category: "Instagram", price: 313.78, min: 10, max: 100000, desc: "15K/Day" },
+            { id: "ig_nd1", name: "Instagram Likes [Non Drop | 40K/Hour]", category: "Instagram", price: 4.63, min: 1, max: 40000, desc: "SuperFast" },
+            { id: "ig_nd2", name: "Instagram Likes [Non Drop | 10K/Hour]", category: "Instagram", price: 5.82, min: 50, max: 10000, desc: "Medium Quality" },
+            { id: "ig_nd3", name: "Instagram Likes [Non Drop | 30K/H]", category: "Instagram", price: 6.97, min: 10, max: 5000000, desc: "MQ" },
+            { id: "ig_nd4", name: "Instagram Likes [Non Drop | 10K/H]", category: "Instagram", price: 4.44, min: 10, max: 25000000, desc: "Start Instant" },
+            { id: "ig_nd5", name: "Instagram Likes [Non Drop | 10K-20K/Day]", category: "Instagram", price: 8.00, min: 100, max: 20000, desc: "Cheapest" },
+            { id: "ig_nd6", name: "Instagram Likes [Non Drop | 100K/Day]", category: "Instagram", price: 17.63, min: 50, max: 2000000, desc: "Start: 0-10Min" },
+            { id: "ig_usa1", name: "Instagram USA Followers [30-Day Refill]", category: "Instagram", price: 406.74, min: 10, max: 100000, desc: "Instant Start" },
+            { id: "ig_usa2", name: "Instagram USA Private Followers", category: "Instagram", price: 435.80, min: 20, max: 100000, desc: "No Duplicate Links" },
+            { id: "ig_usa3", name: "Instagram USA Real Likes [Non-Drop]", category: "Instagram", price: 72.63, min: 10, max: 100000, desc: "Instant" },
+            { id: "ig_br1", name: "Instagram Likes [Brazil | Max 1K]", category: "Instagram", price: 83.37, min: 50, max: 1000, desc: "Brazil" },
+            { id: "ig_br2", name: "Instagram Likes [Brazil | Max 5K]", category: "Instagram", price: 102.06, min: 50, max: 5000, desc: "Brazil" },
+            { id: "ig_br3", name: "Instagram Likes [Brazil | Max 100K]", category: "Instagram", price: 138.51, min: 50, max: 100000, desc: "Brazil" },
+            { id: "ig_eur1", name: "Instagram European Likes [2K/hr]", category: "Instagram", price: 98.78, min: 10, max: 80000, desc: "Lifetime Guaranteed" },
+            { id: "ig_eur2", name: "Instagram European Followers [30D Refill]", category: "Instagram", price: 508.42, min: 10, max: 500000, desc: "10K/Day" },
+            { id: "ig_story1", name: "Instagram Story Views [Max 4K]", category: "Instagram", price: 1.57, min: 10, max: 1000000, desc: "4K/Day" },
+            { id: "ig_story2", name: "Instagram Story Views [Max 30K]", category: "Instagram", price: 18.16, min: 10, max: 10000, desc: "30K/Day" },
+            { id: "ig_story3", name: "Instagram Story Views [Instant]", category: "Instagram", price: 14.53, min: 100, max: 10000, desc: "Max 10K" },
+            { id: "ig_story4", name: "Instagram Story Views [Last Story Only]", category: "Instagram", price: 14.53, min: 20, max: 30000, desc: "10K/Day" },
+            { id: "ig_story5", name: "Instagram Story Mentions [1M/Day]", category: "Instagram", price: 17.44, min: 200, max: 1000000, desc: "Max 1M" },
+            { id: "ig_live1", name: "Instagram Live Viewers [15 Min]", category: "Instagram", price: 581.05, min: 50, max: 50000, desc: "Fast" },
+            { id: "ig_live2", name: "Instagram Live Viewers [30 Min]", category: "Instagram", price: 1162.11, min: 50, max: 50000, desc: "Fast" },
+            { id: "ig_live3", name: "Instagram Live Viewers [60 Min]", category: "Instagram", price: 1888.41, min: 50, max: 50000, desc: "Fast" },
+            { id: "ig_auto1", name: "Instagram Auto Views [Instant]", category: "Instagram", price: 9.45, min: 100, max: 100000000, desc: "Speed: INSTANT" },
+            { id: "ig_auto2", name: "Instagram Auto Views [Cheapest]", category: "Instagram", price: 0.20, min: 10, max: 2147482847, desc: "Instant" },
+            { id: "ig_auto3", name: "Instagram Auto Views + Impressions", category: "Instagram", price: 161.87, min: 100, max: 100000000, desc: "500K/Day" },
+            { id: "ig_ment1", name: "Instagram Mentions | User Followers", category: "Instagram", price: 392.74, min: 5000, max: 1000001, desc: "Mentions" },
+            { id: "ig_ment2", name: "Instagram Mentions [50K-100K]", category: "Instagram", price: 368.20, min: 5000, max: 1000001, desc: "100K/Day" },
+            { id: "ig_prof1", name: "Instagram Profile Visits + Reach", category: "Instagram", price: 10.12, min: 10, max: 1000000, desc: "50K/Day" },
+            { id: "ig_prof2", name: "Instagram Profile Visits [Max 500K]", category: "Instagram", price: 3.45, min: 10, max: 1000000, desc: "Instant" },
+            { id: "ig_eng1", name: "Instagram Engagement + Shares", category: "Instagram", price: 57.33, min: 100, max: 100000, desc: "100k/Hr" },
+            { id: "ig_comm1", name: "Instagram Custom Comments", category: "Instagram", price: 47.60, min: 10, max: 10000, desc: "High Quality" },
+            { id: "ig_comm_rand1", name: "Instagram Random Comments", category: "Instagram", price: 43.58, min: 10, max: 10000, desc: "3-5K Day" },
+            { id: "thread1", name: "Threads Organic Followers", category: "Instagram", price: 1961.05, min: 100, max: 50000, desc: "HQ Accounts Low Drop" },
+            { id: "thread3", name: "Threads Organic Likes", category: "Instagram", price: 1089.47, min: 50, max: 50000, desc: "HQ Accounts Low Drop" },
+            { id: "fb_follow1", name: "Facebook Profile Followers [90D Refill]", category: "Facebook", price: 110.80, min: 10, max: 1000000, desc: "5K/Day" },
+            { id: "fb_follow2", name: "Facebook Profile/Page Followers [30D Refill]", category: "Facebook", price: 108.96, min: 100, max: 5000000, desc: "Non Drop" },
+            { id: "fb_follow3", name: "Facebook Profile Followers [30D Refill]", category: "Facebook", price: 110.88, min: 100, max: 1000000000, desc: "10K/Day" },
+            { id: "fb_group1", name: "Facebook Group Members [MQ | 30D Refill]", category: "Facebook", price: 30.51, min: 10, max: 100000, desc: "5K/Day" },
+            { id: "fb_group2", name: "Facebook Group Members [70D Refill]", category: "Facebook", price: 40.47, min: 100, max: 100000, desc: "5K/Day" },
+            { id: "fb_group3", name: "Facebook Group Member [High Quality]", category: "Facebook", price: 130.75, min: 10, max: 100000, desc: "15K+/Day" },
+            { id: "fb_post1", name: "Facebook Post Likes [30D Refill]", category: "Facebook", price: 320.50, min: 10, max: 50000, desc: "5K/Day" },
+            { id: "fb_post2", name: "Facebook Post Likes [Instant]", category: "Facebook", price: 49.47, min: 10, max: 1000000, desc: "10K-50K/Day" },
+            { id: "fb_post3", name: "Facebook Post Likes [HQ Refill]", category: "Facebook", price: 63.62, min: 10, max: 5000000, desc: "1500/hour" },
+            { id: "fb_reaction1", name: "Facebook Post Reaction [30D Refill]", category: "Facebook", price: 46.51, min: 10, max: 5000000, desc: "50K/Day" },
+            { id: "fb_reaction2", name: "Facebook Post Reaction [30D Refill]", category: "Facebook", price: 11.04, min: 10, max: 5000000, desc: "50K/Day" },
+            { id: "fb_story1", name: "Facebook Story Views [10K/Hr]", category: "Facebook", price: 195.89, min: 100, max: 20000, desc: "Max 100K" },
+            { id: "fb_story2", name: "Facebook Story Views [50K/Hr]", category: "Facebook", price: 195.46, min: 100, max: 20000, desc: "Max 100K" },
+            { id: "fb_live1", name: "Facebook Live Stream Views [15 Min]", category: "Facebook", price: 43.73, min: 10, max: 5000, desc: "Fast Entry" },
+            { id: "fb_live2", name: "Facebook Live Stream Views [30 Min]", category: "Facebook", price: 102.78, min: 20, max: 20000, desc: "Fast Entry" },
+            { id: "fb_live3", name: "Facebook Live Stream Views [60 Min]", category: "Facebook", price: 205.57, min: 20, max: 20000, desc: "Fast Entry" },
+            { id: "fb_live4", name: "Facebook Live Stream Views [90 Min]", category: "Facebook", price: 308.35, min: 20, max: 20000, desc: "Fast Entry" },
+            { id: "tg_mem1", name: "Telegram Non Drop Member [50K+/Day]", category: "Telegram", price: 26.90, min: 500, max: 100000, desc: "30 Days Non Drop" },
+            { id: "tg_mem2", name: "Telegram Member [40K+/Day]", category: "Telegram", price: 28.34, min: 100, max: 100000, desc: "30Days Guaranteed" },
+            { id: "tg_mem3", name: "Telegram Members [50K/D]", category: "Telegram", price: 29.59, min: 500, max: 5000, desc: "30 Days Refill" },
+            { id: "tg_mem4", name: "Telegram Non Drop Members [15K+/Day]", category: "Telegram", price: 30.05, min: 100, max: 100000, desc: "30Days Refill" },
+            { id: "tg_mem5", name: "Telegram Non Drop Members [10K+/Day]", category: "Telegram", price: 42.13, min: 500, max: 30000, desc: "100 Days" },
+            { id: "tg_mem6", name: "Telegram Channel/Group Members [90Day]", category: "Telegram", price: 42.13, min: 500, max: 50000, desc: "50K Speed" },
+            { id: "tg_mem7", name: "Telegram Non Drop Members [30K+/Day]", category: "Telegram", price: 43.92, min: 100, max: 300000, desc: "30 Days" },
+            { id: "tg_view1", name: "Telegram Single Post View", category: "Telegram", price: 1.28, min: 50, max: 100000, desc: "Natural Speed" },
+            { id: "tg_view2", name: "Telegram Single Post View [Cheapest]", category: "Telegram", price: 0.10, min: 10, max: 10000, desc: "Cheapest" },
+            { id: "tg_view3", name: "Telegram Post View [Average Speed]", category: "Telegram", price: 0.58, min: 10, max: 100000, desc: "Average" },
+            { id: "tg_view4", name: "Telegram Single Post View [Fast]", category: "Telegram", price: 6.91, min: 10, max: 500000, desc: "Fast" },
+            { id: "tg_future1", name: "Telegram Auto Views [5 Future Post]", category: "Telegram", price: 12.75, min: 100, max: 2000000, desc: "Auto Views" },
+            { id: "tg_future2", name: "Telegram Auto Views [10 Future Post]", category: "Telegram", price: 26.43, min: 100, max: 2000000, desc: "Auto Views" },
+            { id: "tg_future3", name: "Telegram Auto Views [20 Future Post]", category: "Telegram", price: 52.86, min: 100, max: 2000000, desc: "Auto Views" },
+            { id: "tg_future4", name: "Telegram Auto Views [50 Future Post]", category: "Telegram", price: 121.56, min: 100, max: 2000000, desc: "Auto Views" },
+            { id: "tg_future5", name: "Telegram Auto Views [100 Future Post]", category: "Telegram", price: 226.51, min: 100, max: 2000000, desc: "Auto Views" },
+            { id: "tg_future6", name: "Telegram Auto Views [500 Future Post]", category: "Telegram", price: 990.98, min: 100, max: 2000000, desc: "Auto Views" },
+            { id: "tg_future7", name: "Telegram Auto Views [1000 Future Post]", category: "Telegram", price: 1840.38, min: 100, max: 2000000, desc: "Auto Views" },
+            { id: "tg_prem1", name: "Telegram Premium Members [3 Days]", category: "Telegram", price: 205.90, min: 100, max: 100000, desc: "Russian" },
+            { id: "tg_prem2", name: "Telegram Premium Members [7 Days]", category: "Telegram", price: 316.45, min: 100, max: 100000, desc: "Russian" },
+            { id: "tg_prem3", name: "Telegram Premium Members [10 Days]", category: "Telegram", price: 413.17, min: 100, max: 100000, desc: "Russian" },
+            { id: "tg_prem4", name: "Telegram Premium Members [15 Days]", category: "Telegram", price: 482.26, min: 100, max: 100000, desc: "Russian" },
+            { id: "tg_ctry1", name: "Telegram Chinese Post Views", category: "Telegram", price: 6.97, min: 10, max: 250000, desc: "Include Static" },
+            { id: "tg_ctry2", name: "Telegram Indian Post Views", category: "Telegram", price: 6.97, min: 50, max: 200000, desc: "Include Static" },
+            { id: "tg_ads1", name: "Telegram Ads Solution - Channels & Bots", category: "Telegram", price: 53.00, min: 100, max: 80000, desc: "Competitor Ad Removal" },
+            { id: "tg_ads2", name: "Telegram Ads Solution - Channels", category: "Telegram", price: 58.58, min: 10, max: 50000, desc: "Ad Removal" },
+            { id: "tg_online1", name: "Telegram Group Online Member [30 Days]", category: "Telegram", price: 165.83, min: 10, max: 100000, desc: "New Base" },
+            { id: "tg_online2", name: "Telegram Group Online Member [60 Days]", category: "Telegram", price: 248.40, min: 10, max: 100000, desc: "New Base" },
+            { id: "tg_search1", name: "Telegram Non Drop Member [30 Day]", category: "Telegram", price: 100.86, min: 100, max: 100000, desc: "Join From Search" },
+            { id: "tg_search2", name: "Telegram Non Drop Members [90 Day]", category: "Telegram", price: 94.14, min: 100, max: 100000, desc: "Join From Link" },
+            { id: "tg_prem_react1", name: "Telegram Premium reactions", category: "Telegram", price: 15.54, min: 10, max: 1000000, desc: "📤 + Views" },
+            { id: "tg_stars1", name: "Telegram Premium Stars [For Post]", category: "Telegram", price: 2348.96, min: 1, max: 1000000, desc: "Instant" },
+            { id: "tg_stars2", name: "Telegram Premium Stars [For Profile]", category: "Telegram", price: 2262.21, min: 50, max: 100000, desc: "Instant" },
+            { id: "tg_bot1", name: "Telegram Bot Start For Search Ranking", category: "Telegram", price: 146.82, min: 50, max: 100000, desc: "Russian" },
+            { id: "tg_boost1", name: "Telegram Boost Channel [1 Day]", category: "Telegram", price: 2435.70, min: 1, max: 10000, desc: "Channel Story Activate" },
+            { id: "tg_boost2", name: "Telegram Boost Channel [5 Days]", category: "Telegram", price: 6082.90, min: 10, max: 100000, desc: "Channel Story Activation" },
+            { id: "tg_ai1", name: "Telegram AI Members + 7 Days", category: "Telegram", price: 488.09, min: 500, max: 20000, desc: "Auto Future Post View" },
+            { id: "tg_ai2", name: "Telegram AI Members + 14 Days", category: "Telegram", price: 1269.02, min: 500, max: 20000, desc: "Auto Future Post View" },
+            { id: "tg_ai3", name: "Telegram AI Members + 30 Days", category: "Telegram", price: 2342.80, min: 500, max: 20000, desc: "Auto Future Post View" },
             { id: "ref_bot1", name: "Referrals for Bots", category: "Telegram", price: 3463.39, min: 1, max: 300000, desc: "Bot Referrals" },
             { id: "2128", name: "TG Fake Post Share", category: "Telegram", price: 1.33, min: 10, max: 100000, desc: "Fake Post Share" },
-            { id: "2129", name: "TG Germany Post Share [Include Static]", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Germany Post Share" },
-            { id: "2130", name: "TG Turkey Post Share [Include Static]", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Turkey Post Share" },
-            { id: "2131", name: "TG Israel Post Share [Include Static]", category: "Telegram", price: 6.63, min: 10, max: 100000, desc: "Israel Post Share" },
-            { id: "2132", name: "TG Brazil Post Share [Include Static]", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Brazil Post Share" },
-            { id: "2133", name: "TG China Post Share [Include Static]", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "China Post Share" },
-            { id: "2134", name: "TG USA Post Share [Include Static]", category: "Telegram", price: 6.63, min: 10, max: 100000, desc: "USA Post Share" },
-            { id: "2135", name: "TG Russia Post Share [Include Static]", category: "Telegram", price: 6.63, min: 10, max: 300000, desc: "Russia Post Share" },
-            { id: "2136", name: "TG India Post Share [Include Static]", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "India Post Share" },
-            { id: "2138", name: "TG Fake Post Share [Auto Share For 30 Future Posts]", category: "Telegram", price: 198.73, min: 10, max: 500000, desc: "Auto Share 30 Posts" },
-            { id: "2139", name: "TG Fake Post Share [Auto Share For 50 Future Posts]", category: "Telegram", price: 397.44, min: 10, max: 200000, desc: "Auto Share 50 Posts" },
-
-            // ===== YOUTUBE SERVICES =====
-            { id: "yt_view1", name: "YouTube Views [Max -10M] [Lifetime Non Drop] [Recommended]", category: "YouTube", price: 131.56, min: 500, max: 1000000, desc: "YouTube Views | Lifetime Non Drop" },
-            { id: "yt_view2", name: "YouTube Views [Max -10M] [Lifetime Non Drop] [Recommended]", category: "YouTube", price: 113.17, min: 500, max: 100000000, desc: "YouTube Views | Lifetime Non Drop" },
-            { id: "yt_view3", name: "YouTube Views [Max -10M] [Lifetime Non Drop] [Recommended]", category: "YouTube", price: 103.27, min: 100000, max: 100000000, desc: "YouTube Views | Lifetime Non Drop" },
-            { id: "yt_view4", name: "YouTube Views [Max -10M] [Lifetime Non Drop] [Recommended]", category: "YouTube", price: 99.02, min: 200, max: 100000000, desc: "YouTube Views | Lifetime Non Drop" },
-            { id: "yt_adv1", name: "YouTube AdWords [0-48Hour Complete] [Minimum - 50K Views]", category: "YouTube", price: 59.77, min: 50000, max: 1000000, desc: "AdWords Views | 50K Min" },
-            { id: "yt_adv2", name: "YouTube AdWords [0-48Hour Complete] [Minimum - 100K Views]", category: "YouTube", price: 304.02, min: 100000, max: 1000000, desc: "AdWords Views | 100K Min" },
-            { id: "yt_adv3", name: "YouTube AdWords [0-48Hour Complete] [Minimum - 500K Views]", category: "YouTube", price: 370.94, min: 200, max: 100000000, desc: "AdWords Views | 500K Min" },
-            { id: "yt_watch1", name: "YouTube Watchtime - Speed: 100K/Day - 30 Days [Video Length: 15 Minutes]", category: "YouTube", price: 1876.15, min: 100, max: 100000, desc: "Watchtime | 15 Min Video" },
+            { id: "2129", name: "TG Germany Post Share", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Include Static" },
+            { id: "2130", name: "TG Turkey Post Share", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Include Static" },
+            { id: "2131", name: "TG Israel Post Share", category: "Telegram", price: 6.63, min: 10, max: 100000, desc: "Include Static" },
+            { id: "2132", name: "TG Brazil Post Share", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Include Static" },
+            { id: "2133", name: "TG China Post Share", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Include Static" },
+            { id: "2134", name: "TG USA Post Share", category: "Telegram", price: 6.63, min: 10, max: 100000, desc: "Include Static" },
+            { id: "2135", name: "TG Russia Post Share", category: "Telegram", price: 6.63, min: 10, max: 300000, desc: "Include Static" },
+            { id: "2136", name: "TG India Post Share", category: "Telegram", price: 5.30, min: 10, max: 100000, desc: "Include Static" },
+            { id: "2138", name: "TG Fake Post Share [Auto 30 Future]", category: "Telegram", price: 198.73, min: 10, max: 500000, desc: "Auto Share" },
+            { id: "2139", name: "TG Fake Post Share [Auto 50 Future]", category: "Telegram", price: 397.44, min: 10, max: 200000, desc: "Auto Share" },
+            { id: "yt_view1", name: "YouTube Views [Lifetime Non Drop]", category: "YouTube", price: 131.56, min: 500, max: 1000000, desc: "Recommended" },
+            { id: "yt_view2", name: "YouTube Views [Lifetime Non Drop]", category: "YouTube", price: 113.17, min: 500, max: 100000000, desc: "Recommended" },
+            { id: "yt_view3", name: "YouTube Views [Lifetime Non Drop]", category: "YouTube", price: 103.27, min: 100000, max: 100000000, desc: "Recommended" },
+            { id: "yt_view4", name: "YouTube Views [Lifetime Non Drop]", category: "YouTube", price: 99.02, min: 200, max: 100000000, desc: "Recommended" },
+            { id: "yt_adv1", name: "YouTube AdWords [0-48Hour]", category: "YouTube", price: 59.77, min: 50000, max: 1000000, desc: "Min 50K Views" },
+            { id: "yt_adv2", name: "YouTube AdWords [0-48Hour]", category: "YouTube", price: 304.02, min: 100000, max: 1000000, desc: "Min 100K Views" },
+            { id: "yt_adv3", name: "YouTube AdWords [0-48Hour]", category: "YouTube", price: 370.94, min: 200, max: 100000000, desc: "Min 500K Views" },
+            { id: "yt_watch1", name: "YouTube Watchtime [15 Min Video]", category: "YouTube", price: 1876.15, min: 100, max: 100000, desc: "30 Days" }
         ];
 
         // ============================================
-        // CATEGORY AND SERVICE FUNCTIONS
+        // LOCAL STORAGE PERSISTENCE
+        // ============================================
+        const STORAGE_KEY = 'aayan_smm_user';
+        const ORDER_COUNTER_KEY = 'aayan_smm_order_counter';
+
+        function saveUserToLocal(userData) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        }
+
+        function getUserFromLocal() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : null;
+        }
+
+        function clearUserLocal() {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+
+        function getOrderCounter() {
+            const counter = localStorage.getItem(ORDER_COUNTER_KEY);
+            return counter ? parseInt(counter) : 7313038;
+        }
+
+        function incrementOrderCounter() {
+            const newCounter = getOrderCounter() + 1;
+            localStorage.setItem(ORDER_COUNTER_KEY, newCounter.toString());
+            return newCounter;
+        }
+
+        // ============================================
+        // HELPERS
         // ============================================
         function getCategories() {
             const cats = new Set();
@@ -733,14 +857,13 @@
 
         function renderCategories() {
             const grid = document.getElementById('categoryGrid');
-            const categories = getCategories();
-            
             grid.innerHTML = '';
-            categories.forEach(cat => {
+            getCategories().forEach(cat => {
                 const btn = document.createElement('div');
                 btn.className = 'category-btn';
                 btn.dataset.category = cat;
-                btn.innerHTML = `<i class="fas fa-folder"></i> ${cat}`;
+                const icons = { Twitter: 'fa-twitter', Instagram: 'fa-instagram', Facebook: 'fa-facebook', Telegram: 'fa-telegram', YouTube: 'fa-youtube' };
+                btn.innerHTML = `<i class="fab ${icons[cat] || 'fa-globe'}"></i>${cat}`;
                 btn.onclick = () => selectCategory(cat);
                 grid.appendChild(btn);
             });
@@ -748,271 +871,227 @@
 
         function selectCategory(category) {
             selectedCategory = category;
-            
-            // Update UI
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.category === category);
             });
-            
-            // Show services
             const wrapper = document.getElementById('serviceWrapper');
             wrapper.style.display = 'block';
-            
             const container = document.getElementById('serviceListContainer');
             const services = getServicesByCategory(category);
-            
             container.innerHTML = '';
-            document.getElementById('serviceCount').textContent = `(${services.length} services)`;
-            
+            document.getElementById('serviceCount').textContent = `(${services.length})`;
             if (services.length === 0) {
-                container.innerHTML = '<div class="no-services">No services available in this category.</div>';
+                container.innerHTML = '<div class="no-services">No services available.</div>';
                 return;
             }
-            
             services.forEach(service => {
                 const div = document.createElement('div');
                 div.className = 'service-item';
                 div.dataset.serviceId = service.id;
                 div.innerHTML = `
-                    <span class="s-id">#${service.id}</span>
                     <span class="s-name">${service.name}</span>
-                    <span class="s-price">₹${parseFloat(service.price).toFixed(2)}/unit</span>
+                    <span class="s-price">₹${parseFloat(service.price).toFixed(2)}/1K</span>
+                    <span class="s-id">#${service.id}</span>
                 `;
                 div.onclick = () => selectService(service.id);
                 container.appendChild(div);
             });
-            
-            // Hide order details
             document.getElementById('orderDetails').style.display = 'none';
-            document.getElementById('packageDisplay').style.display = 'none';
         }
 
         function selectService(serviceId) {
             selectedServiceId = serviceId;
             const service = getServiceById(serviceId);
             if (!service) return;
-            
-            // Update UI
             document.querySelectorAll('.service-item').forEach(item => {
                 item.classList.toggle('selected', item.dataset.serviceId === serviceId);
             });
-            
-            // Show order details
             document.getElementById('orderDetails').style.display = 'block';
-            
-            // Update package info
             document.getElementById('packageName').textContent = service.name;
             document.getElementById('packagePrice').textContent = parseFloat(service.price).toFixed(2);
-            document.getElementById('packageDescription').textContent = service.desc || 'No description available';
-            document.getElementById('serviceCategory').textContent = service.category || 'Other';
-            document.getElementById('minOrder').textContent = service.min || 10;
-            document.getElementById('maxOrder').textContent = service.max || 10000;
-            document.getElementById('serviceIdDisplay').textContent = service.id || '-';
-            
-            document.getElementById('orderQuantity').min = service.min || 10;
-            document.getElementById('orderQuantity').max = service.max || 10000;
-            
+            document.getElementById('packageDescription').textContent = service.desc || '';
+            document.getElementById('serviceCategory').textContent = service.category;
+            document.getElementById('minMaxOrder').textContent = `${service.min} / ${service.max}`;
+            document.getElementById('serviceIdDisplay').textContent = service.id;
+            document.getElementById('orderQuantity').min = service.min;
+            document.getElementById('orderQuantity').max = service.max;
             calculateTotal();
         }
 
+        // Direct quantity calculation (no 1=1000 logic)
         window.calculateTotal = function() {
-            const serviceId = selectedServiceId;
             const qty = parseInt(document.getElementById('orderQuantity').value) || 0;
-            
-            if (!serviceId || qty === 0) {
+            if (!selectedServiceId || qty === 0) {
                 document.getElementById('totalCharge').textContent = '0.00';
                 return;
             }
-            
-            const service = getServiceById(serviceId);
+            const service = getServiceById(selectedServiceId);
             if (!service) return;
-            
-            const pricePerUnit = parseFloat(service.price) || 0;
+            const pricePerUnit = parseFloat(service.price) / 1000;
             const total = qty * pricePerUnit;
             document.getElementById('totalCharge').textContent = total.toFixed(2);
         };
 
-        // ============================================
-        // ORDER PLACEMENT
-        // ============================================
         window.handleOrderSubmit = async function(e) {
             e.preventDefault();
-            
             const serviceId = selectedServiceId;
             const link = document.getElementById('orderLink').value;
             const qty = parseInt(document.getElementById('orderQuantity').value);
-            
-            if (!serviceId) { showToast('error', 'No Service Selected', 'Please select a service.'); return; }
-            if (!link) { showToast('error', 'No Link Provided', 'Please enter the target URL.'); return; }
-            if (!qty || qty <= 0) { showToast('error', 'Invalid Quantity', 'Please enter a valid quantity.'); return; }
+            if (!serviceId) { showToast('error', 'No Service', 'Please select a service.'); return; }
+            if (!link || !qty || qty <= 0) { showToast('error', 'Invalid Input', 'Fill all fields.'); return; }
             
             const service = getServiceById(serviceId);
-            if (!service) { showToast('error', 'Service Not Found', 'Please select a valid service.'); return; }
+            if (!service) return;
             
-            const cost = qty * parseFloat(service.price);
+            const cost = qty * (parseFloat(service.price) / 1000);
+            
             const user = window.firebaseAuth.currentUser;
-            if (!user) { showToast('error', 'Session Expired', 'Please re-authenticate.'); return; }
-
-            showLoading('Placing Order...', 'Processing your request');
-            
+            if (!user) { showToast('error', 'Session Expired', 'Please re-login.'); return; }
+            showLoading('Placing Order...', 'Processing');
             try {
                 const userRef = ref(window.firebaseDatabase, 'users/' + user.uid);
                 const snap = await get(userRef);
                 const curBal = snap.val()?.balance || 0;
-
                 if (curBal < cost) {
                     hideLoading();
-                    showModal('error', 'Insufficient Balance', `You need ₹${cost.toFixed(2)}. Please add funds.`, true);
+                    showModal('error', 'Insufficient Balance', `Need ₹${cost.toFixed(2)}.`, true);
                     return;
                 }
-
                 const ordersRef = ref(window.firebaseDatabase, 'orders');
                 const newOrderRef = push(ordersRef);
-                const explicitOrderId = newOrderRef.key.slice(-8).toUpperCase();
-
+                
+                // Generate order ID based on counter
+                const orderCounter = incrementOrderCounter();
+                const explicitOrderId = orderCounter.toString();
+                
                 await set(newOrderRef, {
-                    userId: user.uid,
-                    userEmail: user.email,
-                    service: service.name,
-                    serviceId: serviceId,
-                    category: service.category,
-                    link: link,
-                    quantity: qty,
-                    amount: cost,
-                    status: 'pending',
-                    orderId: explicitOrderId,
-                    createdAt: Date.now()
+                    userId: user.uid, userEmail: user.email, service: service.name, serviceId,
+                    category: service.category, link, quantity: qty, amount: cost,
+                    status: 'pending', orderId: explicitOrderId, createdAt: Date.now()
                 });
-
                 await update(userRef, { balance: curBal - cost });
                 
+                // Update local storage balance
+                const localData = getUserFromLocal();
+                if (localData) {
+                    localData.balance = curBal - cost;
+                    saveUserToLocal(localData);
+                }
+                
                 document.getElementById('userBalance').textContent = (curBal - cost).toFixed(2);
+                document.getElementById('totalBalance').textContent = (curBal - cost).toFixed(2);
                 hideLoading();
-                
-                showModal('success', '✅ Order Placed!', 
-                    `Order #${explicitOrderId}<br>Category: ${service.category}<br>Service: ${service.name}<br>Quantity: ${qty}<br>Amount: ₹${cost.toFixed(2)}`, 
-                    false
-                );
-                
-                // Reset form
+                showModal('success', '✅ Order Placed!', `#${explicitOrderId}<br>${service.name}<br>${qty.toLocaleString()} units<br>₹${cost.toFixed(2)}`, false);
                 document.getElementById('orderLink').value = '';
                 document.getElementById('orderQuantity').value = '';
                 document.getElementById('orderDetails').style.display = 'none';
                 document.querySelectorAll('.service-item').forEach(item => item.classList.remove('selected'));
                 selectedServiceId = null;
                 document.getElementById('totalCharge').textContent = '0.00';
-
             } catch (error) {
-                console.error("Order error:", error);
                 hideLoading();
-                showToast('error', 'Order Failed', error.message || 'Could not place order.');
+                showToast('error', 'Order Failed', error.message);
             }
         };
 
-        // ============================================
-        // CALCULATOR FUNCTION
-        // ============================================
         window.updateCalculator = function() {
             const serviceId = document.getElementById('calcService').value;
             const qty = parseInt(document.getElementById('calcQuantity').value) || 0;
-            
-            if (!serviceId || qty === 0) {
-                document.getElementById('calcResult').style.display = 'none';
-                return;
-            }
-            
+            if (!serviceId || qty === 0) { document.getElementById('calcResult').style.display = 'none'; return; }
             const service = getServiceById(serviceId);
             if (!service) return;
-            
-            const pricePerUnit = parseFloat(service.price) || 0;
+            const pricePerUnit = parseFloat(service.price) / 1000;
             const total = qty * pricePerUnit;
-            
             document.getElementById('calcTotal').textContent = total.toFixed(2);
-            document.getElementById('calcPricePerUnit').textContent = pricePerUnit.toFixed(2);
+            document.getElementById('calcPricePerUnit').textContent = parseFloat(service.price).toFixed(2);
             document.getElementById('calcUnits').textContent = qty.toLocaleString();
             document.getElementById('calcResult').style.display = 'block';
         };
 
-        // ============================================
-        // USER DATA MANAGEMENT
-        // ============================================
-        function formatOrderDate(timestamp) {
-            if(!timestamp) return "N/A";
-            const date = new Date(timestamp);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            let hours = date.getHours();
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            return `${day}-${month}-${year} ${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+        function formatOrderDate(ts) {
+            if(!ts) return "N/A";
+            const d = new Date(ts);
+            const day = String(d.getDate()).padStart(2, '0');
+            const mon = String(d.getMonth() + 1).padStart(2, '0');
+            const yr = d.getFullYear();
+            let hr = d.getHours();
+            const min = String(d.getMinutes()).padStart(2, '0');
+            const ampm = hr >= 12 ? 'PM' : 'AM';
+            hr = hr % 12 || 12;
+            return `${day}-${mon}-${yr} ${String(hr).padStart(2, '0')}:${min} ${ampm}`;
         }
 
         async function loadUserData(user) {
             const userRef = ref(database, 'users/' + user.uid);
             const snapshot = await get(userRef);
+            let userData;
             if (snapshot.exists()) {
-                const userData = snapshot.val();
-                document.getElementById('drawerUserName').textContent = userData.name || 'User';
-                document.getElementById('drawerUserEmail').textContent = user.email;
-                document.getElementById('userBalance').textContent = (userData.balance || 0).toFixed(2);
-                setupRealtimeOrders(user.uid);
+                userData = snapshot.val();
+            } else {
+                userData = { name: user.displayName || 'User', email: user.email, balance: 0, createdAt: Date.now() };
+                await set(userRef, userData);
             }
+            
+            // Save to local storage
+            saveUserToLocal({
+                uid: user.uid,
+                name: userData.name || user.displayName || 'User',
+                email: user.email,
+                balance: userData.balance || 0
+            });
+            
+            document.getElementById('drawerUserName').textContent = userData.name || user.displayName || 'User';
+            document.getElementById('drawerUserEmail').textContent = user.email;
+            const bal = (userData.balance || 0).toFixed(2);
+            document.getElementById('userBalance').textContent = bal;
+            document.getElementById('totalBalance').textContent = bal;
+            setupRealtimeOrders(user.uid);
+            updateStats(user.uid);
+        }
+
+        function updateStats(userId) {
+            const ordersRef = ref(database, 'orders');
+            const ordersQuery = query(ordersRef, orderByChild('userId'), equalTo(userId));
+            onValue(ordersQuery, (snapshot) => {
+                let totalSpent = 0;
+                let totalOrders = 0;
+                snapshot.forEach(child => {
+                    const order = child.val();
+                    totalSpent += parseFloat(order.amount) || 0;
+                    totalOrders++;
+                });
+                document.getElementById('totalSpent').textContent = totalSpent.toFixed(0);
+                document.getElementById('totalOrders').textContent = totalOrders;
+            });
         }
 
         function setupRealtimeOrders(userId) {
             const ordersRef = ref(database, 'orders');
             const ordersQuery = query(ordersRef, orderByChild('userId'), equalTo(userId));
             const mobileContainer = document.getElementById('mobileOrdersContainer');
-
             onValue(ordersQuery, (snapshot) => {
                 if (!snapshot.exists()) {
-                    mobileContainer.innerHTML = `<p style="text-align:center;padding:30px;color:#9ca3af;font-weight:500;">No orders found.</p>`;
+                    mobileContainer.innerHTML = `<p style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No orders yet.</p>`;
                     return;
                 }
-
                 mobileContainer.innerHTML = '';
                 const ordersArray = [];
-                snapshot.forEach((childSnapshot) => { 
-                    ordersArray.push({ id: childSnapshot.key, ...childSnapshot.val() }); 
-                });
-                
+                snapshot.forEach((child) => { ordersArray.push({ id: child.key, ...child.val() }); });
                 ordersArray.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
                 ordersArray.forEach((order) => {
-                    const formattedDateTime = formatOrderDate(order.createdAt);
-                    const orderStatus = order.status || 'pending';
+                    const status = order.status || 'pending';
                     mobileContainer.innerHTML += `
                         <div class="order-mobile-card">
                             <div class="card-row-header">
                                 <span class="card-order-id">#${order.orderId || order.id.slice(0, 8)}</span>
-                                <span class="status-badge status-${orderStatus}">${orderStatus.toUpperCase()}</span>
+                                <span class="status-badge status-${status}">${status.toUpperCase()}</span>
                             </div>
-                            <div class="card-row-item">
-                                <span class="card-label">Category:</span>
-                                <span class="card-value">${order.category || 'N/A'}</span>
-                            </div>
-                            <div class="card-row-item">
-                                <span class="card-label">Service:</span>
-                                <span class="card-value">${order.service}</span>
-                            </div>
-                            <div class="card-row-item">
-                                <span class="card-label">Quantity:</span>
-                                <span class="card-value">${(order.quantity || 0).toLocaleString()}</span>
-                            </div>
-                            <div class="card-row-item">
-                                <span class="card-label">Amount:</span>
-                                <span class="card-value">₹${(order.amount || 0).toFixed(2)}</span>
-                            </div>
-                            <div class="card-row-item">
-                                <span class="card-label">Date:</span>
-                                <span class="card-value">${formattedDateTime}</span>
-                            </div>
-                            <div class="card-row-item" style="margin-bottom:0;margin-top:8px;">
-                                <span class="card-label">Target:</span>
-                                <span class="card-value"><a href="${order.link}" target="_blank"><i class="fas fa-external-link-alt"></i> View</a></span>
-                            </div>
+                            <div class="card-row-item"><span class="card-label">Category</span><span class="card-value">${order.category || 'N/A'}</span></div>
+                            <div class="card-row-item"><span class="card-label">Service</span><span class="card-value">${order.service}</span></div>
+                            <div class="card-row-item"><span class="card-label">Quantity</span><span class="card-value">${(order.quantity || 0).toLocaleString()}</span></div>
+                            <div class="card-row-item"><span class="card-label">Amount</span><span class="card-value">₹${(order.amount || 0).toFixed(2)}</span></div>
+                            <div class="card-row-item"><span class="card-label">Date</span><span class="card-value">${formatOrderDate(order.createdAt)}</span></div>
+                            <div class="card-row-item" style="margin-bottom:0;margin-top:6px;"><span class="card-label">Target</span><span class="card-value"><a href="${order.link}" target="_blank"><i class="fas fa-external-link-alt"></i> View</a></span></div>
                         </div>`;
                 });
             });
@@ -1021,79 +1100,62 @@
         window.loadUserData = loadUserData;
 
         // ============================================
-        // RAZORPAY PAYMENT
+        // RAZORPAY
         // ============================================
         window.initiateRazorpayPayment = async function(event) {
             event.preventDefault();
             const amount = parseFloat(document.getElementById('depositAmount').value);
-            
-            if(isNaN(amount) || amount <= 0) {
-                showToast('error', 'Invalid Amount', 'Please enter a valid amount.');
-                return;
-            }
-
+            if(isNaN(amount) || amount < 10) { showToast('error', 'Invalid Amount', 'Minimum ₹10 required.'); return; }
             const user = window.firebaseAuth.currentUser;
-            if(!user) { showToast('error', 'Not Logged In', 'Please login to add funds.'); return; }
-
+            if(!user) { showToast('error', 'Not Logged In', 'Please login.'); return; }
             const submitBtn = document.getElementById('depositSubmitBtn');
             submitBtn.disabled = true;
-            showLoading('Connecting Gateway...', 'Opening Razorpay Secure Checkout');
-
+            showLoading('Connecting...', 'Opening Razorpay');
             const options = {
                 "key": "rzp_live_T5OZeAeTkrB7YG",
                 "amount": (amount * 100).toString(),
                 "currency": "INR",
-                "name": "SMM Panel",
+                "name": "Aayan SMM",
                 "description": "Wallet Deposit",
                 "handler": async function (response) {
                     hideLoading();
-                    showLoading('Validating Payment...', 'Updating wallet');
-                    
+                    showLoading('Validating...', 'Updating wallet');
                     try {
                         const userRef = ref(window.firebaseDatabase, 'users/' + user.uid);
-                        const userSnapshot = await get(userRef);
-                        const currentBalance = userSnapshot.val()?.balance || 0;
-                        const newBalance = currentBalance + amount;
-
-                        await update(userRef, { balance: newBalance });
-
-                        const logsRef = ref(window.firebaseDatabase, 'deposits');
-                        await push(logsRef, {
-                            userId: user.uid,
-                            userEmail: user.email,
-                            amount: amount,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            status: 'completed',
-                            createdAt: Date.now()
+                        const snap = await get(userRef);
+                        const newBal = (snap.val()?.balance || 0) + amount;
+                        await update(userRef, { balance: newBal });
+                        await push(ref(window.firebaseDatabase, 'deposits'), {
+                            userId: user.uid, userEmail: user.email, amount,
+                            razorpay_payment_id: response.razorpay_payment_id, status: 'completed', createdAt: Date.now()
                         });
-
-                        document.getElementById('userBalance').textContent = newBalance.toFixed(2);
-                        document.getElementById('depositAmount').value = '';
                         
+                        // Update local storage
+                        const localData = getUserFromLocal();
+                        if (localData) {
+                            localData.balance = newBal;
+                            saveUserToLocal(localData);
+                        }
+                        
+                        document.getElementById('userBalance').textContent = newBal.toFixed(2);
+                        document.getElementById('totalBalance').textContent = newBal.toFixed(2);
+                        document.getElementById('depositAmount').value = '';
                         hideLoading();
-                        showModal('success', 'Funds Added! 🎉', 
-                            `₹${amount.toFixed(2)} credited.<br>Payment ID: ${response.razorpay_payment_id}`, 
-                            false
-                        );
-                        showToast('success', 'Deposit Confirmed', `₹${amount} added to wallet.`);
-                    } catch(err) {
-                        hideLoading();
-                        showToast('error', 'Update Error', 'Contact support with your Payment ID.');
-                    } finally {
-                        submitBtn.disabled = false;
-                    }
+                        showModal('success', 'Funds Added! 🎉', `₹${amount.toFixed(2)} credited.<br>ID: ${response.razorpay_payment_id}`, false);
+                        showToast('success', 'Deposit Confirmed', `₹${amount} added.`);
+                    } catch(err) { hideLoading(); showToast('error', 'Update Error', 'Contact support.'); }
+                    finally { submitBtn.disabled = false; }
                 },
-                "prefill": { "name": user.displayName || "SMM Client", "email": user.email || "client@smm.com" },
-                "theme": { "color": "#764ba2" },
+                "prefill": { "name": user.displayName || "Client", "email": user.email || "client@smm.com" },
+                "theme": { "color": "#4caf50" },
                 "modal": { "ondismiss": function(){ hideLoading(); submitBtn.disabled = false; showToast('warning', 'Cancelled', 'Payment cancelled.'); } }
             };
-
             const rzp = new Razorpay(options);
             rzp.open();
         };
 
         // ============================================
-        // AUTH & UI HELPERS
+        // UI HELPERS
         // ============================================
         function showToast(type, title, message) {
             const container = document.getElementById('toastContainer');
@@ -1118,11 +1180,11 @@
         function switchTab(tab) {
             document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            if(tab === 'login') { 
-                document.getElementById('loginForm').classList.add('active'); 
+            if(tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            } else { 
-                document.getElementById('signupForm').classList.add('active'); 
+            } else {
+                document.getElementById('signupForm').classList.add('active');
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
             }
         }
@@ -1135,7 +1197,7 @@
             try {
                 await signInWithEmailAndPassword(window.firebaseAuth, email, password);
                 hideLoading();
-            } catch (err) { 
+            } catch (err) {
                 hideLoading();
                 showToast('error', 'Login Failed', err.message || 'Check credentials.');
             }
@@ -1147,38 +1209,65 @@
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const confirm = document.getElementById('signupConfirmPassword').value;
-            
             if (password !== confirm) { showToast('error', 'Password Mismatch', 'Passwords do not match.'); return; }
-            if (password.length < 6) { showToast('error', 'Weak Password', 'Password must be at least 6 characters.'); return; }
-            
-            showLoading('Creating Account...', 'Registering new user');
+            if (password.length < 6) { showToast('error', 'Weak Password', 'Min 6 characters.'); return; }
+            showLoading('Creating Account...', 'Registering');
             try {
                 const cred = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
                 await set(ref(window.firebaseDatabase, 'users/' + cred.user.uid), { name, email, balance: 0, createdAt: Date.now() });
                 hideLoading();
-                showToast('success', 'Account Created!', 'Welcome to SMM Panel.');
-            } catch (err) { 
+                showToast('success', 'Account Created!', 'Welcome to Aayan SMM.');
+            } catch (err) {
                 hideLoading();
-                showToast('error', 'Signup error', err.message || 'Email might be already in use.');
+                showToast('error', 'Signup error', err.message || 'Email may be in use.');
+            }
+        }
+
+        async function handleGoogleSignIn() {
+            showLoading('Signing in with Google...', 'Connecting');
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                const userRef = ref(database, 'users/' + user.uid);
+                const snap = await get(userRef);
+                if (!snap.exists()) {
+                    await set(userRef, {
+                        name: user.displayName || 'Google User',
+                        email: user.email,
+                        balance: 0,
+                        createdAt: Date.now()
+                    });
+                }
+                hideLoading();
+                showToast('success', 'Welcome!', `Signed in as ${user.displayName || user.email}`);
+            } catch (err) {
+                hideLoading();
+                if (err.code === 'auth/popup-closed-by-user') {
+                    showToast('info', 'Popup Closed', 'Google sign-in was cancelled.');
+                } else if (err.code === 'auth/cancelled-popup-request') {
+                    // Ignore
+                } else {
+                    showToast('error', 'Google Sign-In Failed', err.message || 'Something went wrong.');
+                }
             }
         }
 
         async function handleLogout() {
             showLoading('Logging out...', 'Clearing session');
+            clearUserLocal();
             await signOut(window.firebaseAuth);
             hideLoading();
         }
 
-        function toggleDrawer() { 
-            document.getElementById('drawer').classList.toggle('active'); 
-            document.getElementById('drawerOverlay').classList.toggle('active'); 
+        function toggleDrawer() {
+            document.getElementById('drawer').classList.toggle('active');
+            document.getElementById('drawerOverlay').classList.toggle('active');
         }
-        
+
         function switchSection(sec) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.drawer-item').forEach(d => d.classList.remove('active'));
             document.getElementById(sec + 'Section').classList.add('active');
-            
             const itemIndex = { 'newOrder': 0, 'orders': 1, 'calculator': 2, 'deposit': 3, 'support': 4 };
             const items = document.querySelectorAll('.drawer-item');
             if (items[itemIndex[sec]]) items[itemIndex[sec]].classList.add('active');
@@ -1209,35 +1298,33 @@
         window.showToast = showToast;
         window.showLoading = showLoading;
         window.showModal = showModal;
+        window.handleGoogleSignIn = handleGoogleSignIn;
 
-        // ============================================
-        // POPULATE CALCULATOR DROPDOWN
-        // ============================================
+        // Populate calculator
         function populateCalculatorDropdown() {
             const calcService = document.getElementById('calcService');
             calcService.innerHTML = '<option value="">Select a service...</option>';
-            
             allServices.forEach(service => {
                 const option = document.createElement('option');
                 option.value = service.id;
-                const price = parseFloat(service.price) || 0;
-                option.textContent = `[${service.category}] ${service.name} (₹${price.toFixed(2)})`;
+                option.textContent = `[${service.category}] ${service.name} (₹${parseFloat(service.price).toFixed(2)}/1K)`;
                 calcService.appendChild(option);
             });
         }
 
         // ============================================
-        // MAIN INITIALIZATION
+        // INIT
         // ============================================
         (async () => {
-            try {
-                await setPersistence(auth, browserLocalPersistence);
-            } catch (error) {
-                console.error("Persistence error:", error);
-            }
-            
+            try { await setPersistence(auth, browserLocalPersistence); } catch(e) { console.error(e); }
             renderCategories();
             populateCalculatorDropdown();
+            document.getElementById('googleSignInBtn').addEventListener('click', handleGoogleSignIn);
+            
+            // Initialize order counter if not exists
+            if (!localStorage.getItem(ORDER_COUNTER_KEY)) {
+                localStorage.setItem(ORDER_COUNTER_KEY, '7313038');
+            }
         })();
 
         onAuthStateChanged(auth, async (user) => {
@@ -1254,10 +1341,23 @@
                     hideLoading();
                 }
             } else {
+                // Check local storage for saved session
+                const localUser = getUserFromLocal();
+                if (localUser && localUser.uid) {
+                    // Try to restore session via Firebase
+                    // Firebase handles persistence automatically with browserLocalPersistence
+                }
                 document.getElementById('dashboard').classList.remove('active');
                 document.getElementById('authContainer').style.display = 'flex';
                 splash.classList.add('hidden');
                 hideLoading();
+            }
+        });
+
+        // Prevent accidental refresh
+        window.addEventListener('beforeunload', function(e) {
+            if (window.firebaseAuth.currentUser) {
+                // Just let it go, data is saved
             }
         });
     </script>
